@@ -1,0 +1,31 @@
+{
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "GCC 14.2.0 x86_64-w64-mingw32 Debug",
+            "displayName": "GCC 14.2.0 x86_64-w64-mingw32",
+            "description": "使用编译器: C = F:\\mingw64\\bin\\gcc.exe, CXX = F:\\mingw64\\bin\\g++.exe",
+            "generator": "MinGW Makefiles",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "F:/mingw64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "F:/mingw64/bin/g++.exe",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "GCC 14.2.0 x86_64-w64-mingw32 Release",
+            "displayName": "GCC 14.2.0 x86_64-w64-mingw32 Release",
+            "description": "使用编译器: C = F:\\mingw64\\bin\\gcc.exe, CXX = F:\\mingw64\\bin\\g++.exe",
+            "generator": "MinGW Makefiles",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "F:/mingw64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "F:/mingw64/bin/g++.exe",
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        }
+    ]
+}
