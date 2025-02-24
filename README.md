@@ -45,6 +45,42 @@ Examples文件夹中为例子，放入两个文件，名字为EQSource.txt，Sit
 2. **IM median with period 0.1.txt** 每一行为一个场地的模拟，第一列为场地的ID，第二列为Sa(T=0.1)的中值地震动强度
 3. **IM sim with period 0.1.txt** 每一行为一个场地的模拟，第一列为场地的ID，后面第二列到最后一列为Sa(T=0.1)各次随机模拟的结果
 
+## CMake编译
+1. **安装CMake**: 请从[CMake官网](https://cmake.org/download/)下载并安装适用于您操作系统的CMake版本。
+2. **安装MinGW-w64**: 如果使用的是Windows系统，可以从[MinGW-w64](https://github.com/niXman/mingw-builds-binaries/releases)下载（win11可以使用这个版本`x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev0.7z`）。安装完成后，请确保将MinGW-w64的`bin`目录添加到系统的`PATH`环境变量中。
+3. **修改CMakePresets.json文件中的编译器目录**：
+    ```json
+    {
+        ...
+        "configurePresets": [
+            {
+                "name": "Release",
+                "displayName": "Release",
+                "description": "正在使用编译器: C = F:\\mingw64\\bin\\gcc.exe, CXX = F:\\mingw64\\bin\\g++.exe",
+                "generator": "MinGW Makefiles",
+                "binaryDir": "${sourceDir}/build/${presetName}",
+                "cacheVariables": {
+                    "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                    "CMAKE_C_COMPILER": "F:/mingw64/bin/gcc.exe",
+                    "CMAKE_CXX_COMPILER": "F:/mingw64/bin/g++.exe",
+                    "CMAKE_BUILD_TYPE": "Release"
+                }
+            }
+        ]
+    }
+    ```
+1. **编译Release版本**: 在项目根目录下创建一个新的构建目录并进入该目录，然后使用CMake生成Release版本的构建文件并编译。
+    ```sh
+    mkdir -p build && cd build
+    cmake --preset "GCC 14.2.0 x86_64-w64-mingw32 Release" -S .. -B
+    cmake --build Release
+    ```
+2. **运行可执行文件**: 编译完成后，您可以在`build`目录中找到生成的可执行文件并运行它。
+    ```sh
+    ./IMSim/IMSim.exe
+    ```
+
+
 ## 参考文献
 
 [1] K W Campbell, Y Bozorgnia. NGA-West2 Ground Motion Model for the Average Horizontal Components of PGA, PGV, and 5% Damped Linear Acceleration Response Spectra. Earthquake Spectra, 2014, 30(3): 1087-1115.
@@ -54,5 +90,3 @@ Examples文件夹中为例子，放入两个文件，名字为EQSource.txt，Sit
 [3] K Goda. Interevent Variability of Spatial Correlation of Peak Ground Motions and Response Spectra. Bulletin of the Seismological Society of America, 2011, 101(5): 2522-2531.
 
 [4] M Markhvida, L Ceferino, J W Baker. Modeling spatially correlated spectral accelerations at multiple periods using principal component analysis and geostatistics. Earthquake Engineering & Structural Dynamics, 2018, 47(5): 1107-1123.
-
-
