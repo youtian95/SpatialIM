@@ -1,54 +1,59 @@
-# 地震动强度空间分布随机场模拟
+# Spatial Distribution Simulation of Seismic Intensity
 
-## 示例
-以下为一次地震下某区域 $T=0.2,\ 0.5,\ 1.0\ \rm{s}$ 时谱加速度 $S_a$ 的分布：
+[中文文档](./README_CN.md)
+
+## Examples
+Below are the spectral acceleration (Sa) distributions at T=0.2, 0.5, and 1.0s for a region under an earthquake:
 ![Sa0.2](./Figures/Sa0.2.png)
 ![Sa0.5](./Figures/Sa0.5.png)
 ![Sa1.0](./Figures/Sa1.0.png)
 
-## 使用
+## Usage
 
-Examples文件夹中为例子，放入两个文件，名字为EQSource.txt，SiteFile.txt，依次震源信息和场地信息的文件名，然后直接运行IMSim.exe程序，即可进行模拟。
+The Examples folder contains sample files. Place two files named `EQSource.txt` and `SiteFile.txt`, containing earthquake source information and site information respectively, and then run the `IMSim.exe` program to perform the simulation.
 
-### 输入
+### Input
 
-1. **EQSource.txt** 每行依次为（每行内不同参数用空格分开）：
-    - ifmedian - 0/1，是否输出中位值
-    - M - 震级
-    - N_sim - 次数
-    - seed - int, 随机数种子
-    - lon_0，lat_0 - 震中经纬度，°
-    - W - 断层破裂面矩形的宽度，km，未知时可输入 999
-    - length - 断裂面矩形的长度，km
-    - RuptureNormal_x, RuptureNormal_y, RuptureNormal_z - 断裂面朝上的法线方向（向东为x,向北为y,向上为z）
-    - lambda - 走滑角（°）- 上盘在破裂面内测量的滑移平均角度，与strike方向相同为0度，逆时针为正值
-    - Fhw - 是否考虑上盘效应，0/1
-    - Zhyp - 从海平面测量的震源深度，km， unknown, 未知时可输入 999
-    - region - 研究的区域
-     = 0 全球 (包括台湾)
-     = 1 加州
-     = 3 中国或者土耳其
-     = 4 意大利
-    - nPCs - IM相关性PCA方法模拟考虑的主成分阶数，推荐大于等于5
-1. **SiteFile.txt** 每行为一个场地的数据，每一行空格分开依次为
-    - ID - 场地点的编号
-    - lon - 经度
-    - lat - 纬度
-    - elevation_km - 高程，km
-    - period1 - 基本周期
-    - Vs30_mpers - 剪切波速
-    - Z25_km - 到2.5km/s剪切波速水平面的深度，km，（如果在加州或者日本， Z25_km未知, 可以输入999）
+1. **EQSource.txt** Each line contains the following parameters (separated by spaces):
+    - ifmedian - 0/1, whether to output median values
+    - M - Magnitude
+    - N_sim - Number of simulations
+    - seed - int, random number seed
+    - lon_0, lat_0 - Epicenter longitude and latitude, degrees
+    - W - Width of the fault rupture plane rectangle, km, input 999 if unknown
+    - length - Length of the fault rupture plane rectangle, km
+    - RuptureNormal_x, RuptureNormal_y, RuptureNormal_z - Normal direction of fault plane (east is x, north is y, up is z)
+    - lambda - Rake angle (°) - Average slip angle measured on the hanging wall within the rupture plane, 0 degrees aligned with strike direction, positive counterclockwise
+    - Fhw - Whether to consider hanging wall effects, 0/1
+    - Zhyp - Hypocenter depth measured from sea level, km, input 999 if unknown
+    - region - Study region
+     = 0 Global (including Taiwan)
+     = 1 California
+     = 3 China or Turkey
+     = 4 Italy
+    - nPCs - Number of principal components to consider in the IM correlation PCA method, recommended 5 or more
+1. **SiteFile.txt** Each line represents data for one site, with the following parameters (separated by spaces):
+    - ID - Site ID
+    - lon - Longitude
+    - lat - Latitude
+    - elevation_km - Elevation, km
+    - period1 - Fundamental period
+    - Vs30_mpers - Shear wave velocity
+    - Z25_km - Depth to the 2.5km/s shear wave velocity horizon, km (if in California or Japan and Z25_km is unknown, input 999)
 
-### 输出
+### Output
 
-1. **IM sim.txt** 每一行为一个场地的模拟，第一列为场地的ID，后面第二列到最后一列为该场地周期（**SiteFile.txt**中的period1）各次随机模拟的结果
-2. **IM median with period 0.1.txt** 每一行为一个场地的模拟，第一列为场地的ID，第二列为Sa(T=0.1)的中值地震动强度
-3. **IM sim with period 0.1.txt** 每一行为一个场地的模拟，第一列为场地的ID，后面第二列到最后一列为Sa(T=0.1)各次随机模拟的结果
+1. **IM sim.txt** 
+   Each line represents simulation results for one site. The first column is the site ID, and subsequent columns (from the second to the last) are the random simulation results for the site's period (period1 in `SiteFile.txt`)
+2. **IM median with period 0.1.txt** 
+   Each line represents simulation results for one site. The first column is the site ID, and the second column is the median seismic intensity for $Sa(T=0.1)$
+3. **IM sim with period 0.1.txt** 
+   Each line represents simulation results for one site. The first column is the site ID, and subsequent columns (from the second to the last) are the random simulation results for $Sa(T=0.1)$
 
-## CMake编译
-1. **安装CMake**: 请从[CMake官网](https://cmake.org/download/)下载并安装适用于您操作系统的CMake版本。
-2. **安装MinGW-w64**: 如果使用的是Windows系统，可以从[MinGW-w64](https://github.com/niXman/mingw-builds-binaries/releases)下载（win11可以使用这个版本`x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev0.7z`）。安装完成后，请确保将MinGW-w64的`bin`目录添加到系统的`PATH`环境变量中。
-3. **修改CMakePresets.json文件中的编译器目录**：
+## CMake Compilation
+1. **Install CMake**: Download and install the appropriate version of CMake for your operating system from the [CMake website](https://cmake.org/download/).
+2. **Install MinGW-w64**: For Windows systems, download from [MinGW-w64](https://github.com/niXman/mingw-builds-binaries/releases) (for Windows 11, this version can be used: `x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev0.7z`). After installation, ensure that the MinGW-w64 `bin` directory is added to your system's `PATH` environment variable.
+3. **Modify compiler directory in CMakePresets.json**:
     ```json
     {
         ...
@@ -56,7 +61,7 @@ Examples文件夹中为例子，放入两个文件，名字为EQSource.txt，Sit
             {
                 "name": "Release",
                 "displayName": "Release",
-                "description": "正在使用编译器: C = F:\\mingw64\\bin\\gcc.exe, CXX = F:\\mingw64\\bin\\g++.exe",
+                "description": "Using compiler: C = F:\\mingw64\\bin\\gcc.exe, CXX = F:\\mingw64\\bin\\g++.exe",
                 "generator": "MinGW Makefiles",
                 "binaryDir": "${sourceDir}/build/${presetName}",
                 "cacheVariables": {
@@ -69,19 +74,18 @@ Examples文件夹中为例子，放入两个文件，名字为EQSource.txt，Sit
         ]
     }
     ```
-1. **编译Release版本**: 在项目根目录下创建一个新的构建目录并进入该目录，然后使用CMake生成Release版本的构建文件并编译。
+1. **Compile Release Version**: Create a new build directory in the project root and enter it, then use CMake to generate and compile the Release version build files.
     ```sh
     mkdir -p build && cd build
-    cmake --preset "GCC 14.2.0 x86_64-w64-mingw32 Release" -S .. -B
+    cmake --preset Release -S ..
     cmake --build Release
     ```
-2. **运行可执行文件**: 编译完成后，您可以在`build`目录中找到生成的可执行文件并运行它。
+2. **Run the Executable**: After compilation, you can find the generated executable in the `build` directory and run it.
     ```sh
     ./IMSim/IMSim.exe
     ```
 
-
-## 参考文献
+## References
 
 [1] K W Campbell, Y Bozorgnia. NGA-West2 Ground Motion Model for the Average Horizontal Components of PGA, PGV, and 5% Damped Linear Acceleration Response Spectra. Earthquake Spectra, 2014, 30(3): 1087-1115.
 
