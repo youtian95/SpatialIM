@@ -1,4 +1,4 @@
-# Spatial Distribution Simulation of Seismic Intensity
+# Programs for Simulating Ground Motion Intensity Measure Random Fields
 
 [中文文档](./README_CN.md)
 
