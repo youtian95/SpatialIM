@@ -1,8 +1,8 @@
-// 2021Äê3ÔÂ24ÈÕ16:24:52
-// ***ĞèÒª½øÒ»²½²âÊÔ 
+// 2021å¹´3æœˆ24æ—¥16:24:52
+// ***éœ€è¦è¿›ä¸€æ­¥æµ‹è¯• 
 // 
-// Ò»´Î³¡¾°µØÕğÁ½¸ö³¡µØ£¨¾àÀëÎªh£©Æ×¼ÓËÙ¶ÈµÄepsilon»òÕßetaµÄÏà¹ØÏµÊırho
-// rho_epsilon(h,T1,T2), rho_eta(T1,T2) £¨×¢Òâwithin-eventÓë¾àÀëÎŞ¹Ø£©, rho_total(h,T1,T2)
+// ä¸€æ¬¡åœºæ™¯åœ°éœ‡ä¸¤ä¸ªåœºåœ°ï¼ˆè·ç¦»ä¸ºhï¼‰è°±åŠ é€Ÿåº¦çš„epsilonæˆ–è€…etaçš„ç›¸å…³ç³»æ•°rho
+// rho_epsilon(h,T1,T2), rho_eta(T1,T2) ï¼ˆæ³¨æ„within-eventä¸è·ç¦»æ— å…³ï¼‰, rho_total(h,T1,T2)
 
 #pragma once
 #define _USE_MATH_DEFINES 
@@ -21,7 +21,7 @@ using namespace Eigen;
 class ResidualCE
 {
 public:
-	// Á½¸ö³¡µØ£¨¾àÀëÎªh£©²»Í¬ÖÜÆÚÏÂµÄÆ×¼ÓËÙ¶ÈµÄepsilonµÄÏà¹ØÏµÊı
+	// ä¸¤ä¸ªåœºåœ°ï¼ˆè·ç¦»ä¸ºhï¼‰ä¸åŒå‘¨æœŸä¸‹çš„è°±åŠ é€Ÿåº¦çš„epsilonçš„ç›¸å…³ç³»æ•°
     static double rho_epsilon_loth_baker(double h, double T1, double T2)
         // Compute the spatial correlation of epsilons for the NGA ground motion models
         // 
@@ -37,7 +37,7 @@ public:
         // 
         // rho = The predicted correlation coefficient
         //
-        // ²Î¿¼ÎÄÏ×£º
+        // å‚è€ƒæ–‡çŒ®ï¼š
         // Loth C, Baker JW. A spatial cross-correlation model of spectral accelerations 
         // at multiple periods. Earthquake Eng Struc. 2013;42:397-417. 
         // https://doi.org/10.1002/eqe.2212
@@ -197,7 +197,7 @@ public:
 
 	}
 
-    // µ¥¸ö³¡µØ²»Í¬ÖÜÆÚÏÂµÄÆ×¼ÓËÙ¶ÈµÄtotalµÄÏà¹ØÏµÊı£¨°üº¬ÊÂ¼şÄÚºÍÊÂ¼ş¼äµÄÏà¹ØĞÔ£©
+    // å•ä¸ªåœºåœ°ä¸åŒå‘¨æœŸä¸‹çš„è°±åŠ é€Ÿåº¦çš„totalçš„ç›¸å…³ç³»æ•°ï¼ˆåŒ…å«äº‹ä»¶å†…å’Œäº‹ä»¶é—´çš„ç›¸å…³æ€§ï¼‰
     static double rho_total_baker_jayaram(double T1, double T2)
         // Compute the correlation of epsilons for the NGA ground motion models
         //
@@ -212,7 +212,7 @@ public:
         //
         // rho = The predicted correlation coefficient
         //
-        // ²Î¿¼ÎÄÏ×£º
+        // å‚è€ƒæ–‡çŒ®ï¼š
         // Baker JW, Jayaram N. Correlation of spectral acceleration values 
         // from NGA ground motion models. Earthquake Spectra. 2008;24:299-317. 
         // https://doi.org/10.1193/1.2857544
@@ -264,11 +264,11 @@ public:
         return rho;
     }
 
-    // ²»Í¬ÖÜÆÚÏÂµÄÆ×¼ÓËÙ¶ÈµÄetanµÄÏà¹ØÏµÊı
+    // ä¸åŒå‘¨æœŸä¸‹çš„è°±åŠ é€Ÿåº¦çš„etançš„ç›¸å…³ç³»æ•°
     //
-    // loth&baker(2013)µÄepsilonµÄÏà¹ØÏµÊı + baker&jayaram(2008)µÄtotalµÄÏà¹ØÏµÊı 
-    //  + Campbell&Bozorgnia(2014)µÄGMPE¹À¼Æ±ê×¼²î + Goda&Hong(2008)µÄ·½³Ì
-    // À´¹À¼Æ³öetanµÄÏà¹ØÏµÊı
+    // loth&baker(2013)çš„epsilonçš„ç›¸å…³ç³»æ•° + baker&jayaram(2008)çš„totalçš„ç›¸å…³ç³»æ•° 
+    //  + Campbell&Bozorgnia(2014)çš„GMPEä¼°è®¡æ ‡å‡†å·® + Goda&Hong(2008)çš„æ–¹ç¨‹
+    // æ¥ä¼°è®¡å‡ºetançš„ç›¸å…³ç³»æ•°
     static double rho_eta_Combined_Method(double T1, double T2)
     {
         if (T1 <= 0.01) T1 = 0.01;
@@ -306,7 +306,7 @@ public:
             sigma_eta_T1, sigma_eta_T2);
     }
     static MatrixXf rho_eta_Combined_Method(VectorXf T)
-        //·µ»ØÏà¹ØÏµÊı¾ØÕó
+        //è¿”å›ç›¸å…³ç³»æ•°çŸ©é˜µ
     {
         MatrixXf CE(T.size(), T.size());
         for (size_t i = 0; i < T.size(); i++)
@@ -318,12 +318,12 @@ public:
                     CE(i, j) = 1;
                 }
                 else if (i > j)
-                    //×óÏÂ
+                    //å·¦ä¸‹
                 {
                     CE(i, j) = CE(j, i);
                 }
                 else
-                    //ÓÒÉÏ
+                    //å³ä¸Š
                 {
                     CE(i, j) = rho_eta_Combined_Method(T(i), T(j));
                 }
@@ -332,20 +332,20 @@ public:
         return CE;
     }
 
-    //Ä£ÄâÉú³É between-event residuals 
+    //æ¨¡æ‹Ÿç”Ÿæˆ between-event residuals 
     static MatrixXf Inter_Event_Residuals_Simulation(VectorXf T, int N, default_random_engine* pRND)
-        // ÊäÈë£º
-        // VectorXf T - ÖÜÆÚÏòÁ¿
-        // int N - Ä£ÄâµÄ´ÎÊı
-        // default_random_engine* pRND - Éú³ÉËæ»úÊıµÄÒıÇæÖ¸Õë
+        // è¾“å…¥ï¼š
+        // VectorXf T - å‘¨æœŸå‘é‡
+        // int N - æ¨¡æ‹Ÿçš„æ¬¡æ•°
+        // default_random_engine* pRND - ç”Ÿæˆéšæœºæ•°çš„å¼•æ“æŒ‡é’ˆ
         //
-        // Êä³ö£º
-        // MatrixXf - (i_sim, i_T), »¥ÏàÏà¹ØµÄ±ê×¼ÕıÌ¬·Ö²¼±äÁ¿
+        // è¾“å‡ºï¼š
+        // MatrixXf - (i_sim, i_T), äº’ç›¸ç›¸å…³çš„æ ‡å‡†æ­£æ€åˆ†å¸ƒå˜é‡
     {
         MatrixXf rho_eta = rho_eta_Combined_Method(T);
 
         MatrixXf L;
-        //ÇÇË¹»ù·Ö½â
+        //ä¹”æ–¯åŸºåˆ†è§£
         Eigen::MatrixXf normTransform(T.size(), T.size());
         Eigen::LLT<Eigen::MatrixXf> cholSolver(rho_eta);
         // We can only use the cholesky decomposition if 
@@ -357,7 +357,7 @@ public:
             normTransform = cholSolver.matrixL();
         }
         else {
-            //cout << "¾¯¸æ£ºÏà¹ØÏµÊı¾ØÕóµÄcholesky·Ö½âÊ§°Ü£¬²ÉÓÃÌØÕ÷Öµ·Ö½â£¬ÇÒ½«¸ºÌØÕ÷ÖµÖÃÎª0£¡" << endl;
+            //cout << "è­¦å‘Šï¼šç›¸å…³ç³»æ•°çŸ©é˜µçš„choleskyåˆ†è§£å¤±è´¥ï¼Œé‡‡ç”¨ç‰¹å¾å€¼åˆ†è§£ï¼Œä¸”å°†è´Ÿç‰¹å¾å€¼ç½®ä¸º0ï¼" << endl;
             // Use eigen solver
             Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigenSolver(rho_eta);
             VectorXf eigenvalues = eigenSolver.eigenvalues();
@@ -370,7 +370,7 @@ public:
         }
         L = normTransform;
 
-        // Éú³ÉÏà¹ØµÄ±äÁ¿
+        // ç”Ÿæˆç›¸å…³çš„å˜é‡
         MatrixXf residuals(N,T.size());
         std::normal_distribution<> dist;
         for (int i_sim = 0; i_sim < N; i_sim++)
@@ -386,13 +386,13 @@ public:
         return residuals;
     }
 
-    // rho_epsilon(h,T1,T2), rho_eta(T1,T2), rho_total(h,T1,T2)Ö®¼äµÄ¹ØÏµ
+    // rho_epsilon(h,T1,T2), rho_eta(T1,T2), rho_total(h,T1,T2)ä¹‹é—´çš„å…³ç³»
     // 
     // rho_total(h,T1,T2) * sigma_total(T1) * sigma_total(T2) 
     //      = rho_eta(T1,T2) * sigma_eta(T1) * sigma_eta(T2)
     //        + rho_epsilon(h,T1,T2) * sigma_epsilon(T1) * sigma_epsilon(T2)
     //
-    // ²Î¿¼ÎÄÏ×£º
+    // å‚è€ƒæ–‡çŒ®ï¼š
     // Goda K, Hong HP. Spatial correlation of peak ground motions and 
     // response spectra. B Seismol Soc Am. 2008;98:354-65. 
     // https://doi.org/10.1785/0120070078
@@ -414,7 +414,7 @@ public:
         double rho_total_h_T1_T2, double rho_epsilon_h_T1_T2,
         double sigma_epsilon_T1, double sigma_epsilon_T2,
         double sigma_eta_T1, double sigma_eta_T2)
-        // rho_total_h_T1_T2ºÍrho_epsilon_h_T1_T2ÎªÏàÍ¬hÏÂµÄÏà¹ØÏµÊı
+        // rho_total_h_T1_T2å’Œrho_epsilon_h_T1_T2ä¸ºç›¸åŒhä¸‹çš„ç›¸å…³ç³»æ•°
     {
         double sigma_total_T1 = std::sqrt(sigma_eta_T1 * sigma_eta_T1 + sigma_epsilon_T1 * sigma_epsilon_T1);
         double sigma_total_T2 = std::sqrt(sigma_eta_T2 * sigma_eta_T2 + sigma_epsilon_T2 * sigma_epsilon_T2);

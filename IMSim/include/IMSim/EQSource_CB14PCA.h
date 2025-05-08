@@ -21,10 +21,10 @@ using namespace std;
 using namespace Eigen;
 
 class EQSource_CB14PCA
-	//ÕğÔ´
-	//ÉèÖÃÕğÔ´²ÎÊı->ËùÓĞĞèÒªÄ£ÄâÁÒ¶ÈµÄ³¡µØ×¢²áĞÅÏ¢->Í³Ò»Ä£ÄâÁÒ¶È½á¹û
-	//ËùÓĞÕğÔ´²ÎÊı±ØĞë×¼È·ÊäÈë, ²»ÄÜÊäÈë 999
-	//ps: ÄÚ²¿x,yÒÔÕğÔ´ÖĞĞÄÎªÔ­µã, km
+	//éœ‡æº
+	//è®¾ç½®éœ‡æºå‚æ•°->æ‰€æœ‰éœ€è¦æ¨¡æ‹Ÿçƒˆåº¦çš„åœºåœ°æ³¨å†Œä¿¡æ¯->ç»Ÿä¸€æ¨¡æ‹Ÿçƒˆåº¦ç»“æœ
+	//æ‰€æœ‰éœ‡æºå‚æ•°å¿…é¡»å‡†ç¡®è¾“å…¥, ä¸èƒ½è¾“å…¥ 999
+	//ps: å†…éƒ¨x,yä»¥éœ‡æºä¸­å¿ƒä¸ºåŸç‚¹, km
 {
 public:
 	struct SiteInfo
@@ -59,7 +59,7 @@ public:
 		length = in;
 	}
 	void set_RuptureNormal(double x, double y, double z)
-		//ÉèÖÃ¶ÏÁÑÃæ³¯ÉÏµÄ·¨ÏòÏòÁ¿
+		//è®¾ç½®æ–­è£‚é¢æœä¸Šçš„æ³•å‘å‘é‡
 	{
 		RuptureNormal << x, y, z;
 		RuptureNormal.normalize();
@@ -96,19 +96,19 @@ public:
 		region = in;
 	}
 	void set_nPCs(int in)
-		//IMÏà¹ØĞÔPCA·½·¨Ä£Äâ¿¼ÂÇµÄÖ÷³É·Ö½×Êı£¬ÍÆ¼ö´óÓÚµÈÓÚ5
+		//IMç›¸å…³æ€§PCAæ–¹æ³•æ¨¡æ‹Ÿè€ƒè™‘çš„ä¸»æˆåˆ†é˜¶æ•°ï¼Œæ¨èå¤§äºç­‰äº5
 	{
 		nPCs = in;
 	}
 	void set_lamda_M(double (*f)(double M), double M_min_, double M_max_)
-		//ÉèÖÃº¯ÊıÖ¸Õë
+		//è®¾ç½®å‡½æ•°æŒ‡é’ˆ
 	{
 		assert(M_min_ < M_max_);
 		lamda_M = f;
 		M_min = M_min_;
 		M_max = M_max_;
 	}
-	//×¢²á³¡µØºÍÄ£ÄâÁÒ¶È
+	//æ³¨å†Œåœºåœ°å’Œæ¨¡æ‹Ÿçƒˆåº¦
 	void register_site(int ID, double lon, double lat, double elevation_km,
 		double period1, double Vs30_mpers, double Z25_km)
 	{
@@ -132,14 +132,14 @@ public:
 		firstSim = 1;
 	}
 	void clear_sites()
-		//Çå³ıËùÓĞ×¢²á³¡µØ
+		//æ¸…é™¤æ‰€æœ‰æ³¨å†Œåœºåœ°
 	{
 		SiteInfo_map.clear();
 		firstSim = 1;
 	}
 	void SimulateIntensities(vector<double> M_, bool ifmedian = false, bool OutputIMAllPeriods = true)
 	{
-		//ÖĞ¼ä½á¹û£¬ËùÓĞÄ£ÄâµÄÖÜÆÚ
+		//ä¸­é—´ç»“æœï¼Œæ‰€æœ‰æ¨¡æ‹Ÿçš„å‘¨æœŸ
 		VectorXf T_sim(19);
 		T_sim << 0.010, 0.020, 0.030, 0.050, 0.075, 0.10, 0.15, 0.20, 0.25, 0.30, 0.40, 0.50,
 			0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0;
@@ -180,14 +180,14 @@ public:
 				j_site++;
 			}
 			if (firstSim)
-				//µÚÒ»´ÎÄ£ÄâĞèÒª×¢²á³¡µØ
+				//ç¬¬ä¸€æ¬¡æ¨¡æ‹Ÿéœ€è¦æ³¨å†Œåœºåœ°
 			{
 				SR.RegisterSites(x, y);
 				firstSim = 0;
 			}
-			//Ä£Äâ within-event residuals
+			//æ¨¡æ‹Ÿ within-event residuals
 			IMNormResiduals = SR.simulateResiduals(T_sim, M_.size());
-			//Ä£Äâ between-event residuals
+			//æ¨¡æ‹Ÿ between-event residuals
 			IMNormInterResiduals = ResidualCE::Inter_Event_Residuals_Simulation(T_sim, M_.size(), pRND);
 		}
 
@@ -198,18 +198,18 @@ public:
 		int j = 0;
 		for (map<int, SiteInfo>::iterator iter = SiteInfo_map.begin();
 			iter != SiteInfo_map.end(); iter++)
-			// Ã¿¸ö³¡µØµÄ½¨Öş
+			// æ¯ä¸ªåœºåœ°çš„å»ºç­‘
 		{
 			auto site = iter->second;
 
-			//Ã¿¸ö³¡µØ»º´æÒ»¸ö½á¹û£¬Èç¹ûÕğ¼¶²»±ä£¬¿ÉÒÔÖ±½ÓÓÃ´Ë½á¹û
+			//æ¯ä¸ªåœºåœ°ç¼“å­˜ä¸€ä¸ªç»“æœï¼Œå¦‚æœéœ‡çº§ä¸å˜ï¼Œå¯ä»¥ç›´æ¥ç”¨æ­¤ç»“æœ
 			VectorXf Median_PGA_buffer, sigma_PGA_buffer, tau_PGA_buffer,
 				Median_Sa_buffer, sigma_Sa_buffer, tau_Sa_buffer, 
 				Median_Sa_allT_buffer, sigma_Sa_allT_buffer, tau_Sa_allT_buffer;
 			double M_buffer = 0;
 
 			for (int i = 0; i < M_.size(); i++)
-				// Ã¿´ÎµØÕğ
+				// æ¯æ¬¡åœ°éœ‡
 			{
 
 				VectorXf Median_PGA, sigma_PGA, tau_PGA, period1;
@@ -219,7 +219,7 @@ public:
 
 				if (M_[i] != M_buffer)
 				{
-					// ÓÃ0s´¦µÄSa´ú±íPGA
+					// ç”¨0så¤„çš„Saä»£è¡¨PGA
 					gmpe.CB_2014_nga(&Median_PGA, &sigma_PGA, &tau_PGA, &period1,
 						M_[i], VectorXf::Zero(1), site.Rrup, site.Rjb, site.Rx,
 						W, site.Ztor, site.Zbot, delta, lambda, Fhw,
@@ -236,7 +236,7 @@ public:
 						W, site.Ztor, site.Zbot, delta, lambda, Fhw,
 						site.Vs30, site.Z25, Zhyp, region);
 
-					//ĞŞ¸Ä»º´æ
+					//ä¿®æ”¹ç¼“å­˜
 					M_buffer = M_[i];
 					Median_PGA_buffer = Median_PGA;
 					sigma_PGA_buffer = sigma_PGA;
@@ -261,24 +261,24 @@ public:
 					tau_Sa_allT = tau_Sa_allT_buffer;
 				}
 
-				// ¸ù¾İÏà¹ØĞÔÄ£Äâ½á¹û
+				// æ ¹æ®ç›¸å…³æ€§æ¨¡æ‹Ÿç»“æœ
 				if (!ifmedian)
 				{
 					// within-event residuals
 					float PGA_Res = GMPE::interp1(T_sim, IMNormResiduals[i].row(j), 0.001);
 					// between-event residuals
 					float PGA_Inter_Res = GMPE::interp1(T_sim, IMNormInterResiduals.row(i), 0.001);
-					// ×îºóµÄÄ£Äâ½á¹û
+					// æœ€åçš„æ¨¡æ‹Ÿç»“æœ
 					float PGA = exp(log(Median_PGA[0]) + PGA_Inter_Res * tau_PGA[0]
 						+ sqrt(sigma_PGA[0] * sigma_PGA[0] - tau_PGA[0] * tau_PGA[0]) * PGA_Res);
 					// within-event residuals
 					float Sa_Res = GMPE::interp1(T_sim, IMNormResiduals[i].row(j), site.T);
 					// between-event residuals
 					float Sa_Inter_Res = GMPE::interp1(T_sim, IMNormInterResiduals.row(i), site.T);
-					// ×îºóµÄÄ£Äâ½á¹û
+					// æœ€åçš„æ¨¡æ‹Ÿç»“æœ
 					float Sa = exp(log(Median_Sa[0]) + Sa_Inter_Res * tau_Sa[0]
 						+ sqrt(sigma_Sa[0] * sigma_Sa[0] - tau_Sa[0] * tau_Sa[0]) * Sa_Res);
-					// ËùÓĞÖÜÆÚµÄ½á¹û
+					// æ‰€æœ‰å‘¨æœŸçš„ç»“æœ
 					for (size_t i_T_sim = 0; i_T_sim < T_sim.size(); i_T_sim++)
 					{
 						float Sa_T_sim = exp(log(Median_Sa_allT[i_T_sim]) 
@@ -292,12 +292,12 @@ public:
 							exp(log(Median_Sa_allT[i_T_sim])
 								+ IMNormInterResiduals.row(i)[i_T_sim] * tau_Sa_allT[i_T_sim]);
 					}
-					//¸³Öµ
+					//èµ‹å€¼
 					PGA_map[site.ID][i] = PGA;
 					Sa_map[site.ID][i] = Sa;
 				}
 				else
-					// Êä³öÖĞÖµ
+					// è¾“å‡ºä¸­å€¼
 				{
 					PGA_map[site.ID][i] = Median_PGA[0];
 					Sa_map[site.ID][i] = Median_Sa[0];
@@ -378,9 +378,9 @@ public:
 	{
 		return Sa_map.at(ID);
 	}
-	//°´³¡µØÊä³ö½á¹û
+	//æŒ‰åœºåœ°è¾“å‡ºç»“æœ
 	void io_IM(string filename) {
-		// Ã¿Ò»ĞĞÎªÒ»¸ö³¡µØµÄ½á¹û£¬ÒÀ´ÎÎª [ID, 1 x N_sim]
+		// æ¯ä¸€è¡Œä¸ºä¸€ä¸ªåœºåœ°çš„ç»“æœï¼Œä¾æ¬¡ä¸º [ID, 1 x N_sim]
 
 		ofstream of;
 		of.open(filename, ios::out | ios::trunc);
@@ -400,9 +400,9 @@ public:
 		of.close();
 	}
 	void io_IM_AllT(string filename) {
-		// Ã¿Ò»ĞĞÎªÒ»¸ö³¡µØµÄ½á¹û£¬ÒÀ´ÎÎª [ID,T,1 x N_sim], ¶ÔÓÚÍ¬Ò»¸öID³¡µØ£¬TÓĞ¼¸¸öÖÜÆÚ¾ÍÓĞ¼¸ĞĞ
+		// æ¯ä¸€è¡Œä¸ºä¸€ä¸ªåœºåœ°çš„ç»“æœï¼Œä¾æ¬¡ä¸º [ID,T,1 x N_sim], å¯¹äºåŒä¸€ä¸ªIDåœºåœ°ï¼ŒTæœ‰å‡ ä¸ªå‘¨æœŸå°±æœ‰å‡ è¡Œ
 
-		//ÖĞ¼ä½á¹û£¬ËùÓĞÄ£ÄâµÄÖÜÆÚ
+		//ä¸­é—´ç»“æœï¼Œæ‰€æœ‰æ¨¡æ‹Ÿçš„å‘¨æœŸ
 		VectorXf T_sim(19);
 		T_sim << 0.010, 0.020, 0.030, 0.050, 0.075, 0.10, 0.15, 0.20, 0.25, 0.30, 0.40, 0.50,
 			0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0;
@@ -410,10 +410,10 @@ public:
 		ofstream of;
 		of.open(filename, ios::out | ios::trunc);
 		auto iter = Sa_map_allPeriods.begin();
-		// Ã¿¸ö³¡µØ
+		// æ¯ä¸ªåœºåœ°
 		while (iter != Sa_map_allPeriods.end()) {
 			int ID = iter->first;
-			// T=0µÄPGA
+			// T=0çš„PGA
 			of << ID << "  ";
 			VectorXf PGA_1site = PGA_map[ID];
 			for (size_t i = 0; i < PGA_1site.size(); i++)
@@ -421,13 +421,13 @@ public:
 				of << PGA_1site[i] << "  ";
 			}
 			of << endl;
-			// Ã¿¸öÖÜÆÚµÄSA
+			// æ¯ä¸ªå‘¨æœŸçš„SA
 			vector<VectorXf> SaVec_allT = iter->second;
 			for (size_t i_T = 0; i_T < SaVec_allT.size(); i_T++)
 			{
 				of << ID << "  ";
 				of << T_sim[i_T] << "  ";
-				// Ã¿´ÎÄ£Äâ
+				// æ¯æ¬¡æ¨¡æ‹Ÿ
 				VectorXf SaVec = SaVec_allT[i_T];
 				for (size_t i = 0; i < SaVec.size(); i++)
 				{
@@ -441,7 +441,7 @@ public:
 		of.close();
 	}
 	void io_XY(string filename) {
-		// Ã¿Ò»ĞĞÎªÒ»¸ö³¡µØµÄÏà¶ÔÓÚÕğÖĞµÄ×ø±ê£¬ÒÀ´ÎÎª [ID, x ,y]
+		// æ¯ä¸€è¡Œä¸ºä¸€ä¸ªåœºåœ°çš„ç›¸å¯¹äºéœ‡ä¸­çš„åæ ‡ï¼Œä¾æ¬¡ä¸º [ID, x ,y]
 
 		ofstream of;
 		of.open(filename, ios::out | ios::trunc);
@@ -457,16 +457,16 @@ public:
 
 		of.close();
 	}
-	//°´Íø¸ñÊä³ö
+	//æŒ‰ç½‘æ ¼è¾“å‡º
 	void io_PGA_Sa_Grid(vector<double> ML, bool ifmedian, double period,
 		double elevation_km, double Vs30, double Z25_km,
-		double bound_left, double bound_right, //¾­¶È
-		double bound_down, double bound_up, //Î³¶È
+		double bound_left, double bound_right, //ç»åº¦
+		double bound_down, double bound_up, //çº¬åº¦
 		int N_lat = 100, int N_lon = 100)
-		//Êä³öPGA Sa, ÀúÊ·¼ÇÂ¼µÄ³¡µØĞÅÏ¢ºÍÄ£Äâ½á¹û»á±»Ïû³ı
-		//Ã¿Ò»ĞĞÊÇÍ¬Ò»¸öÎ³¶È£¬¾­¶ÈºÍÎ³¶È¾ùÎª´ÓĞ¡µ½´óÅÅĞò
+		//è¾“å‡ºPGA Sa, å†å²è®°å½•çš„åœºåœ°ä¿¡æ¯å’Œæ¨¡æ‹Ÿç»“æœä¼šè¢«æ¶ˆé™¤
+		//æ¯ä¸€è¡Œæ˜¯åŒä¸€ä¸ªçº¬åº¦ï¼Œç»åº¦å’Œçº¬åº¦å‡ä¸ºä»å°åˆ°å¤§æ’åº
 	{
-		//×¢²á³¡µØ
+		//æ³¨å†Œåœºåœ°
 		SiteInfo_map.clear();
 		int ID = 0;
 		map<int, pair<double, double>> ID2XY;
@@ -475,7 +475,7 @@ public:
 			for (int n_lon = 0; n_lon <= N_lon; n_lon++)
 			{
 				ID++;
-				//µ±Ç°µã¾­¶ÈºÍÎ³¶È
+				//å½“å‰ç‚¹ç»åº¦å’Œçº¬åº¦
 				double lon = bound_left + n_lon * (bound_right - bound_left) / (double)N_lon;
 				double lat = bound_down + n_lat * (bound_up - bound_down) / (double)N_lat;
 				ID2XY.insert(make_pair(ID, make_pair(getX(lon), getY(lat))));
@@ -483,8 +483,8 @@ public:
 			}
 		}
 
-		//Êä³öÍø¸ñµÄx,y×ø±ê
-		cout << "Êä³öÍø¸ñx,y×ø±ê... " << endl;
+		//è¾“å‡ºç½‘æ ¼çš„x,yåæ ‡
+		cout << "è¾“å‡ºç½‘æ ¼x,yåæ ‡... " << endl;
 		{
 			ofstream of;
 			of.open("X_grid.txt", ios::out | ios::trunc);
@@ -530,8 +530,8 @@ public:
 			of.close();
 		}
 
-		//Êä³öÍø¸ñµÄ¾­Î³¶È×ø±ê
-		cout << "Êä³öÍø¸ñ¾­Î³¶È×ø±ê... " << endl;
+		//è¾“å‡ºç½‘æ ¼çš„ç»çº¬åº¦åæ ‡
+		cout << "è¾“å‡ºç½‘æ ¼ç»çº¬åº¦åæ ‡... " << endl;
 		{
 			ofstream of;
 			of.open("longitude_grid.txt", ios::out | ios::trunc);
@@ -541,7 +541,7 @@ public:
 				for (int n_lon = 0; n_lon <= N_lon; n_lon++)
 				{
 					ID++;
-					//µ±Ç°µã¾­¶ÈºÍÎ³¶È
+					//å½“å‰ç‚¹ç»åº¦å’Œçº¬åº¦
 					double lon = bound_left + n_lon * (bound_right - bound_left) / (double)N_lon;
 					double lat = bound_down + n_lat * (bound_up - bound_down) / (double)N_lat;
 					of << fixed << setprecision(6) << lon;
@@ -566,7 +566,7 @@ public:
 				for (int n_lon = 0; n_lon <= N_lon; n_lon++)
 				{
 					ID++;
-					//µ±Ç°µã¾­¶ÈºÍÎ³¶È
+					//å½“å‰ç‚¹ç»åº¦å’Œçº¬åº¦
 					double lon = bound_left + n_lon * (bound_right - bound_left) / N_lon;
 					double lat = bound_down + n_lat * (bound_up - bound_down) / N_lat;
 					of << fixed << setprecision(6) << lat;
@@ -583,13 +583,13 @@ public:
 			of.close();
 		}
 
-		//Ä£ÄâµØÕğ
+		//æ¨¡æ‹Ÿåœ°éœ‡
 		M_list = ML;
 		//simulate_intensities(M_list, ifmedian);
 		SimulateIntensities(M_list, ifmedian);
 
-		//Êä³öÄ£ÄâµÄPGA
-		cout << "Êä³öPGAÍø¸ñ... " << endl;
+		//è¾“å‡ºæ¨¡æ‹Ÿçš„PGA
+		cout << "è¾“å‡ºPGAç½‘æ ¼... " << endl;
 		{
 			vector<ofstream> outfile(M_list.size());
 			for (int i = 0; i < outfile.size(); i++)
@@ -624,8 +624,8 @@ public:
 			}
 		}
 
-		//Êä³öÄ£ÄâµÄSa
-		cout << "Êä³öSaÍø¸ñ... " << endl;
+		//è¾“å‡ºæ¨¡æ‹Ÿçš„Sa
+		cout << "è¾“å‡ºSaç½‘æ ¼... " << endl;
 		{
 			vector<ofstream> outfile(M_list.size());
 			for (int i = 0; i < outfile.size(); i++)
@@ -661,14 +661,14 @@ public:
 		}
 
 	}
-	//°´Íø¸ñÊä³ö³¡µØ²ÎÊı
+	//æŒ‰ç½‘æ ¼è¾“å‡ºåœºåœ°å‚æ•°
 	void io_Rrup(string filename, double elevation_km,
-		double bound_left, double bound_right, //¾­¶È
-		double bound_down, double bound_up, //Î³¶È
+		double bound_left, double bound_right, //ç»åº¦
+		double bound_down, double bound_up, //çº¬åº¦
 		int N_lat = 100, int N_lon = 100) const
-		//Ã¿Ò»ĞĞÊÇÍ¬Ò»¸öÎ³¶È£¬¾­¶ÈºÍÎ³¶È¾ùÎª´ÓĞ¡µ½´óÅÅĞò
+		//æ¯ä¸€è¡Œæ˜¯åŒä¸€ä¸ªçº¬åº¦ï¼Œç»åº¦å’Œçº¬åº¦å‡ä¸ºä»å°åˆ°å¤§æ’åº
 	{
-		cout << "Êä³öRrupÍø¸ñ: " << filename << " ..." << endl;
+		cout << "è¾“å‡ºRrupç½‘æ ¼: " << filename << " ..." << endl;
 		ofstream outfile;
 		outfile.open(filename, ios::out | ios::trunc);
 
@@ -676,10 +676,10 @@ public:
 		{
 			for (int n_lon = 0; n_lon < N_lon; n_lon++)
 			{
-				//µ±Ç°µã¾­¶ÈºÍÎ³¶È
+				//å½“å‰ç‚¹ç»åº¦å’Œçº¬åº¦
 				double lon = bound_left + n_lon * (bound_right - bound_left) / N_lon;
 				double lat = bound_down + n_lat * (bound_up - bound_down) / N_lat;
-				//Êä³ö
+				//è¾“å‡º
 				outfile << Rrup(lon, lat, elevation_km) << ",";
 			}
 			double lat = bound_down + n_lat * (bound_up - bound_down) / N_lat;
@@ -689,12 +689,12 @@ public:
 		outfile.close();
 	}
 	void io_Rx(string filename,
-		double bound_left, double bound_right, //¾­¶È
-		double bound_down, double bound_up, //Î³¶È
+		double bound_left, double bound_right, //ç»åº¦
+		double bound_down, double bound_up, //çº¬åº¦
 		int N_lat = 100, int N_lon = 100) const
-		//Ã¿Ò»ĞĞÊÇÍ¬Ò»¸öÎ³¶È£¬¾­¶ÈºÍÎ³¶È¾ùÎª´ÓĞ¡µ½´óÅÅĞò
+		//æ¯ä¸€è¡Œæ˜¯åŒä¸€ä¸ªçº¬åº¦ï¼Œç»åº¦å’Œçº¬åº¦å‡ä¸ºä»å°åˆ°å¤§æ’åº
 	{
-		cout << "Êä³öRxÍø¸ñ: " << filename << " ..." << endl;
+		cout << "è¾“å‡ºRxç½‘æ ¼: " << filename << " ..." << endl;
 		ofstream outfile;
 		outfile.open(filename, ios::out | ios::trunc);
 
@@ -702,10 +702,10 @@ public:
 		{
 			for (int n_lon = 0; n_lon < N_lon; n_lon++)
 			{
-				//µ±Ç°µã¾­¶ÈºÍÎ³¶È
+				//å½“å‰ç‚¹ç»åº¦å’Œçº¬åº¦
 				double lon = bound_left + n_lon * (bound_right - bound_left) / N_lon;
 				double lat = bound_down + n_lat * (bound_up - bound_down) / N_lat;
-				//Êä³ö
+				//è¾“å‡º
 
 				outfile << Rx(lon, lat) << ",";
 			}
@@ -716,12 +716,12 @@ public:
 		outfile.close();
 	}
 	void io_Rjb(string filename,
-		double bound_left, double bound_right, //¾­¶È
-		double bound_down, double bound_up, //Î³¶È
+		double bound_left, double bound_right, //ç»åº¦
+		double bound_down, double bound_up, //çº¬åº¦
 		int N_lat = 100, int N_lon = 100) const
-		//Ã¿Ò»ĞĞÊÇÍ¬Ò»¸öÎ³¶È£¬¾­¶ÈºÍÎ³¶È¾ùÎª´ÓĞ¡µ½´óÅÅĞò
+		//æ¯ä¸€è¡Œæ˜¯åŒä¸€ä¸ªçº¬åº¦ï¼Œç»åº¦å’Œçº¬åº¦å‡ä¸ºä»å°åˆ°å¤§æ’åº
 	{
-		cout << "Êä³öRjbÍø¸ñ: " << filename << " ..." << endl;
+		cout << "è¾“å‡ºRjbç½‘æ ¼: " << filename << " ..." << endl;
 		ofstream outfile;
 		outfile.open(filename, ios::out | ios::trunc);
 
@@ -729,10 +729,10 @@ public:
 		{
 			for (int n_lon = 0; n_lon < N_lon; n_lon++)
 			{
-				//µ±Ç°µã¾­¶ÈºÍÎ³¶È
+				//å½“å‰ç‚¹ç»åº¦å’Œçº¬åº¦
 				double lon = bound_left + n_lon * (bound_right - bound_left) / N_lon;
 				double lat = bound_down + n_lat * (bound_up - bound_down) / N_lat;
-				//Êä³ö
+				//è¾“å‡º
 				outfile << Rjb(lon, lat) << ",";
 			}
 			double lat = bound_down + n_lat * (bound_up - bound_down) / N_lat;
@@ -741,31 +741,31 @@ public:
 
 		outfile.close();
 	}
-	//¹¦ÄÜº¯Êı
+	//åŠŸèƒ½å‡½æ•°
 	pair<double, double> get_location() const
 	{
 		return location;
 	}
 	double get_lamda_all() const
-		//Ò»ÄêÆ½¾ù·¢Éú´ÎÊı
+		//ä¸€å¹´å¹³å‡å‘ç”Ÿæ¬¡æ•°
 	{
 		if (!lamda_M)
 		{
-			cout << "Error: Ã»ÓĞÊäÈëÕğÔ´¸ÅÂÊĞÅÏ¢." << endl;
+			cout << "Error: æ²¡æœ‰è¾“å…¥éœ‡æºæ¦‚ç‡ä¿¡æ¯." << endl;
 			throw "";
 		}
 		return (lamda_M(M_min) - lamda_M(M_max));
 	}
 	double get_RandomMagnitude(default_random_engine* p) const
-		//Ëæ»úÉú³ÉÒ»¸öÕğ¼¶
+		//éšæœºç”Ÿæˆä¸€ä¸ªéœ‡çº§
 	{
 		if (!lamda_M)
 		{
-			cout << "Error: Ã»ÓĞÊäÈëÕğÔ´¸ÅÂÊĞÅÏ¢." << endl;
+			cout << "Error: æ²¡æœ‰è¾“å…¥éœ‡æºæ¦‚ç‡ä¿¡æ¯." << endl;
 			throw "";
 		}
 
-		//²ÎÊı
+		//å‚æ•°
 		double error = 0.0005; int n_max = 10;
 
 		double lamda_max = lamda_M(M_min);
@@ -782,11 +782,11 @@ public:
 		}
 	}
 	vector<double> get_DiscreteMagnitude(int n_M) const
-		//¸ù¾İn_M»®·ÖÕğ¼¶·¶Î§, ·µ»ØÕğ¼¶ÏòÁ¿
+		//æ ¹æ®n_Måˆ’åˆ†éœ‡çº§èŒƒå›´, è¿”å›éœ‡çº§å‘é‡
 	{
 		if (!lamda_M)
 		{
-			cout << "Error: Ã»ÓĞÊäÈëÕğÔ´¸ÅÂÊĞÅÏ¢." << endl;
+			cout << "Error: æ²¡æœ‰è¾“å…¥éœ‡æºæ¦‚ç‡ä¿¡æ¯." << endl;
 			throw "";
 		}
 		assert(n_M >= 2);
@@ -798,8 +798,8 @@ public:
 		return result;
 	}
 	double get_Integral_f_M_X_x(const map<double, double>& x_M) const
-		//¼ÆËã Integral[f(M)x(M)]dM »ı·Ö£¬f(M)ÎªMµÄ¸ÅÂÊÃÜ¶Èº¯Êı, 
-		//x(M)ÎªÍâ²¿ÊäÈëº¯Êı map<M, x> ±ØĞë´ÓĞ¡µ½´ó
+		//è®¡ç®— Integral[f(M)x(M)]dM ç§¯åˆ†ï¼Œf(M)ä¸ºMçš„æ¦‚ç‡å¯†åº¦å‡½æ•°, 
+		//x(M)ä¸ºå¤–éƒ¨è¾“å…¥å‡½æ•° map<M, x> å¿…é¡»ä»å°åˆ°å¤§
 	{
 		double integral = 0;
 		if (x_M.size() < 2) throw "Error!";
@@ -850,54 +850,54 @@ public:
 		return integral;
 	}
 	double get_lamdaFromM(double M) const
-		//²éÑ¯lamdaº¯Êı
+		//æŸ¥è¯¢lamdaå‡½æ•°
 	{
 		if (!lamda_M)
 		{
-			cout << "Error: Ã»ÓĞÊäÈëÕğÔ´¸ÅÂÊĞÅÏ¢." << endl;
+			cout << "Error: æ²¡æœ‰è¾“å…¥éœ‡æºæ¦‚ç‡ä¿¡æ¯." << endl;
 			throw "";
 		}
 		return lamda_M(M);
 	}
 	double getX(double lon) const
-		//¸ù¾İ¾­Î³¶È»ñÈ¡Ä³Ò»µãµÄX
+		//æ ¹æ®ç»çº¬åº¦è·å–æŸä¸€ç‚¹çš„X
 	{
 		double x_in = (lon - location.first) * pi / 180.0 * R * cos(location.second * pi / 180.0) / 1000.0;
 		return x_in;
 	}
 	double getY(double lat) const
-		//¸ù¾İ¾­Î³¶È»ñÈ¡Ä³Ò»µãµÄY
+		//æ ¹æ®ç»çº¬åº¦è·å–æŸä¸€ç‚¹çš„Y
 	{
 		double y_in = (lat - location.second) * pi / 180.0 * R / 1000.0;
 		return y_in;
 	}
 	double getLon(double x) const
-		//¸ù¾İX»ñÈ¡Ä³Ò»µãµÄ¾­¶È
+		//æ ¹æ®Xè·å–æŸä¸€ç‚¹çš„ç»åº¦
 	{
 		double lon = x * 1000.0 / cos(location.second * pi / 180.0) / R * 180.0 / pi + location.first;
 		return lon;
 	}
 	double getLat(double y) const
-		//¸ù¾İy»ñÈ¡Ä³Ò»µãµÄÎ³¶È
+		//æ ¹æ®yè·å–æŸä¸€ç‚¹çš„çº¬åº¦
 	{
 		double lat = y * 1000.0 / R * 180.0 / pi + location.second;
 		return lat;
 	}
 
 	static double Finverse(double y, double (*f)(double), double error, int n, double x_min, double x_max)
-		//¶ş·Ö·¨Çóµ¥µ÷º¯Êıf(x)µÄ·´º¯Êı
-		//yÎª¼ÆËãµÄÖµ,fÎªº¯ÊıÖ¸Õë, errorÎªÎó²î, ×î¶à¼ÆËãn´Î
+		//äºŒåˆ†æ³•æ±‚å•è°ƒå‡½æ•°f(x)çš„åå‡½æ•°
+		//yä¸ºè®¡ç®—çš„å€¼,fä¸ºå‡½æ•°æŒ‡é’ˆ, errorä¸ºè¯¯å·®, æœ€å¤šè®¡ç®—næ¬¡
 	{
 		assert(error > 0);
 		assert(x_min < x_max);
-		if (f(x_min) == f(x_max)) return x_min; //ÏàµÈÊ±, Êä³ö×îĞ¡x
+		if (f(x_min) == f(x_max)) return x_min; //ç›¸ç­‰æ—¶, è¾“å‡ºæœ€å°x
 		if (f(x_min) <= f(x_max))
-			//µ¥Ôö
+			//å•å¢
 		{
 			assert(y >= f(x_min) && y <= f(x_max));
 		}
 		else
-			//µ¥¼õ
+			//å•å‡
 		{
 			assert(y >= f(x_max) && y <= f(x_min));
 		}
@@ -907,16 +907,16 @@ public:
 		double x = (x_left + x_right) / 2.0;
 		int i = 0;
 		while (abs(f(x) - y) > error && i < n)
-			//Îó²îÃ»´ïµ½»òÕß¼ÆËã´ÎÊıÃ»´ïµ½
+			//è¯¯å·®æ²¡è¾¾åˆ°æˆ–è€…è®¡ç®—æ¬¡æ•°æ²¡è¾¾åˆ°
 		{
 			if ((y - f(x_left)) * (f(x) - y) >= 0)
-				//ÔÚx_leftºÍxÖ®¼ä
+				//åœ¨x_leftå’Œxä¹‹é—´
 			{
 				x_right = x;
 				x = (x_left + x_right) / 2.0;
 			}
 			else
-				//ÔÚx_rightºÍxÖ®¼ä
+				//åœ¨x_rightå’Œxä¹‹é—´
 			{
 				x_left = x;
 				x = (x_left + x_right) / 2.0;
@@ -926,10 +926,10 @@ public:
 		return x;
 	}
 	static int RecentM(double M, const vector<double>& M_list)
-		//·µ»ØM_listÖĞM¶ÔÓ¦µÄË÷ÒıÎ»ÖÃ
-		//Ö®Íâ·µ»Ø-1
+		//è¿”å›M_listä¸­Må¯¹åº”çš„ç´¢å¼•ä½ç½®
+		//ä¹‹å¤–è¿”å›-1
 	{
-		//ÖĞ¼ä
+		//ä¸­é—´
 		for (int i = 1; i < M_list.size() - 1; i++)
 		{
 			if (((M_list[i - 1] + M_list[i]) / 2.0) <= M &&
@@ -956,14 +956,14 @@ public:
 
 protected:
 	default_random_engine* pRND;
-	//ÊÇ·ñµÚÒ»´ÎÄ£ÄâÏà¹ØĞÔ
+	//æ˜¯å¦ç¬¬ä¸€æ¬¡æ¨¡æ‹Ÿç›¸å…³æ€§
 	bool firstSim = 1;
-	//ÕğÔ´ĞÅÏ¢
-	pair<double, double> location; //¾­Î³¶È
-	double R = 6371393; //µØÇò°ë¾¶m
+	//éœ‡æºä¿¡æ¯
+	pair<double, double> location; //ç»çº¬åº¦
+	double R = 6371393; //åœ°çƒåŠå¾„m
 	double pi = 3.1415926;
 	double W = 0;
-	double length = 0; //¶ÏÁÑÃæË®Æ½·½Ïò³¤¶È
+	double length = 0; //æ–­è£‚é¢æ°´å¹³æ–¹å‘é•¿åº¦
 	Vector3f RuptureNormal; 
 	double delta = 90; //degree
 	double lambda = 0; //degree
@@ -971,36 +971,36 @@ protected:
 	double Zhyp = 0;
 	int region = 3;
 	int nPCs = 18;
-	//³¡µØĞÅÏ¢
+	//åœºåœ°ä¿¡æ¯
 	map<int, SiteInfo> SiteInfo_map;
-	//Ä£ÄâµØÕğ
+	//æ¨¡æ‹Ÿåœ°éœ‡
 	vector<double> M_list;
-	double (*lamda_M)(double M) = 0; //Õğ¼¶ÎªMÄê¾ù³¬Ô½´ÎÊı
-	double M_min; double M_max; //¿¼ÂÇµÄÕğ¼¶ÉÏÏÂÏŞ
+	double (*lamda_M)(double M) = 0; //éœ‡çº§ä¸ºMå¹´å‡è¶…è¶Šæ¬¡æ•°
+	double M_min; double M_max; //è€ƒè™‘çš„éœ‡çº§ä¸Šä¸‹é™
 	SimulateResiduals SR;
-	//Ä£Äâ½á¹û
-	map<int, VectorXf> PGA_map; //Ã¿´ÎÄ£ÄâµÄ½á¹û
-	map<int, VectorXf> Sa_map; //Ã¿´ÎÄ£ÄâµÄ½á¹û
-	map<int, vector<VectorXf>> Sa_map_allPeriods; //ËùÓĞÖÜÆÚµÄSaÄ£Äâ½á¹û
-	map<int, vector<double>> SaMedian_map_allPeriods; //ËùÓĞÖÜÆÚµÄSaÖĞÖµÄ£Äâ½á¹û
-	map<int, vector<VectorXf>> SaMedian_PlusBR_map_allPeriods; //ËùÓĞÖÜÆÚµÄ SaÖĞÖµ+Between-event residul Ä£Äâ½á¹û
+	//æ¨¡æ‹Ÿç»“æœ
+	map<int, VectorXf> PGA_map; //æ¯æ¬¡æ¨¡æ‹Ÿçš„ç»“æœ
+	map<int, VectorXf> Sa_map; //æ¯æ¬¡æ¨¡æ‹Ÿçš„ç»“æœ
+	map<int, vector<VectorXf>> Sa_map_allPeriods; //æ‰€æœ‰å‘¨æœŸçš„Saæ¨¡æ‹Ÿç»“æœ
+	map<int, vector<double>> SaMedian_map_allPeriods; //æ‰€æœ‰å‘¨æœŸçš„Saä¸­å€¼æ¨¡æ‹Ÿç»“æœ
+	map<int, vector<VectorXf>> SaMedian_PlusBR_map_allPeriods; //æ‰€æœ‰å‘¨æœŸçš„ Saä¸­å€¼+Between-event residul æ¨¡æ‹Ÿç»“æœ
 
 	static bool FootpointInsideQuad(Vector3f p, vector<Vector3f> quad)
-		//ÅĞ¶ÏpµÄ´¹×ãÊÇ·ñÔÚ¾ØĞÎÖ®ÄÚ,¼ÆËã´¹×ãÔÚ¾ØĞÎÆ½ÃæµÄÏà¶Ô×ø±ê, ¾ØĞÎ×ø±êµÄË³Ğò±ØĞëÁ¬Ğø
+		//åˆ¤æ–­pçš„å‚è¶³æ˜¯å¦åœ¨çŸ©å½¢ä¹‹å†…,è®¡ç®—å‚è¶³åœ¨çŸ©å½¢å¹³é¢çš„ç›¸å¯¹åæ ‡, çŸ©å½¢åæ ‡çš„é¡ºåºå¿…é¡»è¿ç»­
 	{
-		//¾ØĞÎÁ½Ìõ±ß
+		//çŸ©å½¢ä¸¤æ¡è¾¹
 		Vector3f P12 = quad[1] - quad[0];
 		Vector3f P23 = quad[2] - quad[1];
-		//¾ØĞÎÖĞĞÄ
+		//çŸ©å½¢ä¸­å¿ƒ
 		Vector3f c = 0.25 * (quad[0] + quad[1] + quad[2] + quad[3]);
-		//´¹×ã
+		//å‚è¶³
 		Vector3f Normal = P12.cross(P23);
 		Normal.normalize();
 		if ((c - p).dot(Normal) < 0) Normal = -Normal;
 		Vector3f fp = abs((c - p).dot(Normal)) * Normal + p;
-		//¾ØĞÎÆ½ÃæÄÚµÄÖ±Ïß
+		//çŸ©å½¢å¹³é¢å†…çš„ç›´çº¿
 		Vector3f l = fp - c;
-		//Ïà¶Ô×ø±ê
+		//ç›¸å¯¹åæ ‡
 		double x = abs(l.dot(P12.normalized()) / P12.norm());
 		double y = abs(l.dot(P23.normalized()) / P23.norm());
 
@@ -1014,7 +1014,7 @@ protected:
 		}
 	}
 	static float Distance_PointAndLineSegment(Vector3f p, Vector3f p_1, Vector3f p_2)
-		// return: µãµ½Ïß¶ÎµÄ×îĞ¡¾àÀë
+		// return: ç‚¹åˆ°çº¿æ®µçš„æœ€å°è·ç¦»
 	{
 		double dis;
 		if ((p - p_1).dot(p_2 - p_1) < 0 || (p - p_2).dot(p_1 - p_2) < 0)
@@ -1029,7 +1029,7 @@ protected:
 	}
 
 	vector<Vector3f> Rupture4Points() const
-		//¶ÏÁÑÃæµÄËÄ¸öµã, ÉÏ->ÏÂ, ÏàÁÚÅÅÁĞ
+		//æ–­è£‚é¢çš„å››ä¸ªç‚¹, ä¸Š->ä¸‹, ç›¸é‚»æ’åˆ—
 	{
 		vector<Vector3f> result;
 
@@ -1040,7 +1040,7 @@ protected:
 		Vector3f ramp_up_half = RuptureNormal.cross(Hor_half);
 		ramp_up_half.normalize();
 		ramp_up_half = W / 2.0 * ramp_up_half;
-		//ËÄ¸öµã
+		//å››ä¸ªç‚¹
 		Vector3f P1 = ramp_up_half + Hor_half; 
 		result.push_back(P1);
 		Vector3f P2 = P1 - 2.0 * Hor_half;
@@ -1053,25 +1053,25 @@ protected:
 		return result;
 	}
 	double Rrup(double lon, double lat, double elevation_km) const
-		//Rrup¾àÀë, ¶ÏÁÑÃæÎª¾ØĞÎ
-		//µ½¶ÏÁÑÃæµÄ×îĞ¡¾àÀë
+		//Rrupè·ç¦», æ–­è£‚é¢ä¸ºçŸ©å½¢
+		//åˆ°æ–­è£‚é¢çš„æœ€å°è·ç¦»
 	{
 		double x = getX(lon);
 		double y = getY(lat);
 		double z = elevation_km + Zhyp;
 		Vector3f site(x,y,z);
-		//¶ÏÁÑÃæ¾ØĞÎËÄ¸öµã×ø±ê, ÒÔ¶ÏÁÑÃæÖĞĞÄÎªÔ­µã
+		//æ–­è£‚é¢çŸ©å½¢å››ä¸ªç‚¹åæ ‡, ä»¥æ–­è£‚é¢ä¸­å¿ƒä¸ºåŸç‚¹
 		vector<Vector3f> Rupture4P = Rupture4Points();
 		
 		if (FootpointInsideQuad(site, Rupture4P))
 		{
-			//´¹Ïß¾àÀë
+			//å‚çº¿è·ç¦»
 			double dist1 = (Rupture4P[0] - site).dot(-RuptureNormal);
 			dist1 = abs(dist1);
 			return dist1;
 		}
 		else
-			//¼ÆËãµ½ËÄÌõ±ßµÄ×î½ü¾àÀë
+			//è®¡ç®—åˆ°å››æ¡è¾¹çš„æœ€è¿‘è·ç¦»
 		{
 			float dist1 = Distance_PointAndLineSegment(site, Rupture4P[0], Rupture4P[1]);
 			float dist2 = Distance_PointAndLineSegment(site, Rupture4P[1], Rupture4P[2]);
@@ -1081,13 +1081,13 @@ protected:
 		}
 	}
 	double Rjb(double lon, double lat) const
-		//µ½¶ÏÁÑÃæÍ¶Ó°µÄ×î½ü¾àÀë
+		//åˆ°æ–­è£‚é¢æŠ•å½±çš„æœ€è¿‘è·ç¦»
 	{
 		double x = getX(lon);
 		double y = getY(lat);
 		double z = 0;
 		Vector3f site(x, y, z);
-		//¶ÏÁÑÃæ¾ØĞÎËÄ¸öµã×ø±ê, ÒÔ¶ÏÁÑÃæÖĞĞÄÎªÔ­µã
+		//æ–­è£‚é¢çŸ©å½¢å››ä¸ªç‚¹åæ ‡, ä»¥æ–­è£‚é¢ä¸­å¿ƒä¸ºåŸç‚¹
 		vector<Vector3f> Rupture4P = Rupture4Points();
 		for (int i = 0; i < Rupture4P.size(); i++)
 		{
@@ -1108,23 +1108,23 @@ protected:
 		}
 	}
 	double Rx(double lon, double lat) const
-		//µ½¶ÏÁÑÃæÉÏ±ßÔµÍ¶Ó°µÄ´¹Ïß¾àÀë, Hanging wall sideÎªÕı
+		//åˆ°æ–­è£‚é¢ä¸Šè¾¹ç¼˜æŠ•å½±çš„å‚çº¿è·ç¦», Hanging wall sideä¸ºæ­£
 	{
 		double x = getX(lon);
 		double y = getY(lat);
 		double z = 0;
 		Vector3f site(x, y, z);
-		//¶ÏÁÑÃæ¾ØĞÎËÄ¸öµã×ø±ê, ÒÔ¶ÏÁÑÃæÖĞĞÄÎªÔ­µã
+		//æ–­è£‚é¢çŸ©å½¢å››ä¸ªç‚¹åæ ‡, ä»¥æ–­è£‚é¢ä¸­å¿ƒä¸ºåŸç‚¹
 		vector<Vector3f> Rupture4P = Rupture4Points();
 		for (int i = 0; i < Rupture4P.size(); i++)
 		{
 			Rupture4P[i][2] = 0;
 		}
-		//´¹Ïß¾àÀë
+		//å‚çº¿è·ç¦»
 		double result1 = (Rupture4P[0] - site).cross(Rupture4P[1] - site).norm() 
 			/ (Rupture4P[0] - Rupture4P[1]).norm();
 		assert(result1 >= 0);
-		//ÅĞ¶ÏHanging wall side
+		//åˆ¤æ–­Hanging wall side
 		Vector3f n_xy = RuptureNormal; n_xy[2] = 0; n_xy.normalize();
 		Vector3f center = 0.5 * (Rupture4P[0] + Rupture4P[1]);
 		if ((site - center).dot(n_xy) > 0)

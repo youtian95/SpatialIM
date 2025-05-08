@@ -1,9 +1,9 @@
-//²ÉÓÃPCA·½·¨Ä£Äâ¶à¸ö³¡µØ¡¢²»Í¬ÖÜÆÚÏÂÆ×¼ÓËÙ¶ÈSa(T)µÄwithin-event residuals
-//ÕâĞ©within-event residualsÊÇÏà¹ØµÄ
+//é‡‡ç”¨PCAæ–¹æ³•æ¨¡æ‹Ÿå¤šä¸ªåœºåœ°ã€ä¸åŒå‘¨æœŸä¸‹è°±åŠ é€Ÿåº¦Sa(T)çš„within-event residuals
+//è¿™äº›within-event residualsæ˜¯ç›¸å…³çš„
 //
-//Ê¹ÓÃ·½·¨£º×¢²á³¡µØ->Ä£Äâ
+//ä½¿ç”¨æ–¹æ³•ï¼šæ³¨å†Œåœºåœ°->æ¨¡æ‹Ÿ
 //
-// ²Î¿¼ÎÄÏ×£º
+// å‚è€ƒæ–‡çŒ®ï¼š
 // Markhvida M, Ceferino L, Baker JW.Modeling spatially correlated spectral 
 // accelerations at multiple periods using principal component analysis and 
 // geostatistics.Earthquake Eng Struc. 2018; 47:1107 - 23. 
@@ -85,7 +85,7 @@ public:
         pRND = p;
     }
     void RegisterSites(const VectorXf& x, const VectorXf& y)
-        //×¢²á³¡µØ, ÇÇË¹»ù·Ö½â
+        //æ³¨å†Œåœºåœ°, ä¹”æ–¯åŸºåˆ†è§£
     {
         VectorXf variance_scale_factor = variance_scale_factor_;
         vector<ModelVario> modelVario = modelVario_;
@@ -122,7 +122,7 @@ public:
             cout << i << endl;
             covMatrix[i] = getCovariance(distanceMatrix, modelVario[i]);
 
-            //ÇÇË¹»ù·Ö½â
+            //ä¹”æ–¯åŸºåˆ†è§£
 
             Eigen::MatrixXf normTransform(nLocs, nLocs);
 
@@ -137,7 +137,7 @@ public:
                 normTransform = cholSolver.matrixL();
             }
             else {
-                cout << "Ğ­·½²î¾ØÕóµÄcholesky·Ö½âÊ§°Ü£¡" << endl;
+                cout << "åæ–¹å·®çŸ©é˜µçš„choleskyåˆ†è§£å¤±è´¥ï¼" << endl;
                 // Use eigen solver
                 Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigenSolver(covMatrix[i]);
                 normTransform = eigenSolver.eigenvectors()
@@ -241,7 +241,7 @@ public:
 
 private:
     default_random_engine* pRND;
-    vector<MatrixXf> L; //Ã¿¸öPCA·ÖÁ¿µÄ ÇÇË¹»ù·Ö½â LL^T = COV
+    vector<MatrixXf> L; //æ¯ä¸ªPCAåˆ†é‡çš„ ä¹”æ–¯åŸºåˆ†è§£ LL^T = COV
     VectorXf T_ = VectorXf(19);
     Matrix<float, 19, 19> PCAcoefs_;
     VectorXf variance_scale_factor_ = VectorXf(19);
@@ -336,7 +336,7 @@ private:
         return original;
     }
     static VectorXi findmember(const VectorXf& x_sim, const VectorXf& x_all)
-        //Ñ°ÕÒx_simÔÚx_allÖĞµÄÎ»ÖÃ, ´Ó1¿ªÊ¼
+        //å¯»æ‰¾x_simåœ¨x_allä¸­çš„ä½ç½®, ä»1å¼€å§‹
     {
         VectorXi result(x_sim.size());
         for (int i = 0; i < x_sim.size(); i++)
@@ -355,7 +355,7 @@ private:
         return result;
     }
     static double interp1(VectorXf x, VectorXf y, double vx)
-        //²åÖµ, xµ¥µ÷
+        //æ’å€¼, xå•è°ƒ
     {
         assert(x.size() == y.size());
         if (vx < x[0])
