@@ -8,7 +8,9 @@
 
 ## 使用
 
-Examples文件夹中为例子，放入两个文件，名字为EQSource.txt，SiteFile.txt，依次震源信息和场地信息的文件名，然后直接运行IMSim.exe程序，即可进行模拟。
+### 示例1 - 可执行文件
+
+Examples/Example 1文件夹中为例子，放入两个文件，名字为EQSource.txt，SiteFile.txt，依次震源信息和场地信息的文件名，然后直接运行IMSim.exe程序，即可进行模拟。
 
 ### 输入
 
@@ -45,40 +47,63 @@ Examples文件夹中为例子，放入两个文件，名字为EQSource.txt，Sit
 2. **IM median with period 0.1.txt** 每一行为一个场地的模拟，第一列为场地的ID，第二列为Sa(T=0.1)的中值地震动强度
 3. **IM sim with period 0.1.txt** 每一行为一个场地的模拟，第一列为场地的ID，后面第二列到最后一列为Sa(T=0.1)各次随机模拟的结果
 
-## CMake编译
-1. **安装CMake**: 请从[CMake官网](https://cmake.org/download/)下载并安装适用于您操作系统的CMake版本。
-2. **安装MinGW-w64**: 如果使用的是Windows系统，可以从[MinGW-w64](https://github.com/niXman/mingw-builds-binaries/releases)下载（win11可以使用这个版本`x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev0.7z`）。安装完成后，请确保将MinGW-w64的`bin`目录添加到系统的`PATH`环境变量中。
-3. **修改CMakePresets.json文件中的编译器目录**：
-    ```json
-    {
-        ...
-        "configurePresets": [
-            {
-                "name": "Release",
-                "displayName": "Release",
-                "description": "正在使用编译器: C = F:\\mingw64\\bin\\gcc.exe, CXX = F:\\mingw64\\bin\\g++.exe",
-                "generator": "MinGW Makefiles",
-                "binaryDir": "${sourceDir}/build/${presetName}",
-                "cacheVariables": {
-                    "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                    "CMAKE_C_COMPILER": "F:/mingw64/bin/gcc.exe",
-                    "CMAKE_CXX_COMPILER": "F:/mingw64/bin/g++.exe",
-                    "CMAKE_BUILD_TYPE": "Release"
-                }
-            }
-        ]
-    }
-    ```
-1. **编译Release版本**: 在项目根目录下创建一个新的构建目录并进入该目录，然后使用CMake生成Release版本的构建文件并编译。
-    ```sh
-    mkdir -p build && cd build
-    cmake --preset Release -S ..
-    cmake --build Release
-    ```
-2. **运行可执行文件**: 编译完成后，您可以在`build`目录中找到生成的可执行文件并运行它。
-    ```sh
-    ./IMSim/IMSim.exe
-    ```
+### 示例2 - Python导入
+
+Example 2文件夹包含SpatialIM的Python模块实现。这允许您直接在Python中使用SpatialIM功能。
+
+#### 前提条件
+
+1. **Python 3.11**：模块文件名为`spatialim.cp311-win_amd64.pyd`，这表明它是针对Python 3.11编译的。
+2. **相同的处理器架构**：您的Python解释器必须是64位的（win_amd64）。
+
+#### 使用方法
+
+1. 将`.pyd`文件复制到您的Python脚本目录，然后导入它：
+   ```python
+   import spatialim
+   ```
+
+2. 创建地震源并设置参数：
+   ```python
+   # A创建地震源
+   eqs = spatialim.EQSource_CB14PCA(lon_0, lat_0)
+   
+   # 设置参数
+   eqs.set_seed(seed)                          # 随机数种子
+   eqs.set_W(W)                                # 断裂面宽度(km)
+   eqs.set_length(length)                      # 断裂面长度(km)
+   eqs.set_RuptureNormal(normal_x, normal_y, normal_z)  # 法线方向
+   eqs.set_lambda(lambda_angle)                # 走滑角(度)
+   eqs.set_Fhw(Fhw)                            # 上盘效应
+   eqs.set_Zhyp(Zhyp)                          # 震源深度(km)
+   eqs.set_region(region)                      # 区域(1=加州)
+   eqs.set_nPCs(nPCs)                          # 主成分数
+   ```
+
+3. 注册场地并运行模拟：
+   ```python
+   # 注册场地
+   eqs.register_site(
+       site_id,       # 场地ID
+       lon,           # 经度
+       lat,           # 纬度
+       elevation_km,  # 高程(km)
+       period,        # 周期(s)
+       vs30,          # Vs30(m/s)
+       z25            # Z25(km), 未知用999
+   )
+   
+   # 运行模拟
+   magnitudes = [M] * N_sim
+   eqs.simulate_intensities(magnitudes, ifmedian=False)
+   
+   # 保存结果
+   eqs.save_im("IM sim.txt")
+   eqs.save_xy("XY coord.txt")
+   ```
+
+更详细的使用说明，请参考Example 2文件夹中的`README_python_usage.md`和`spatialim_example.py`文件。
+
 
 
 ## 参考文献

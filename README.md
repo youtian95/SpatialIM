@@ -10,9 +10,11 @@ Below are the spectral acceleration (Sa) distributions at T=0.2, 0.5, and 1.0s f
 
 ## Usage
 
-The Examples folder contains sample files. Place two files named `EQSource.txt` and `SiteFile.txt`, containing earthquake source information and site information respectively, and then run the `IMSim.exe` program to perform the simulation.
+### Examples 1 - executable program
 
-### Input
+The Examples 1 folder contains sample files. Place two files named `EQSource.txt` and `SiteFile.txt`, containing earthquake source information and site information respectively, and then run the `IMSim.exe` program to perform the simulation.
+
+#### Input
 
 1. **EQSource.txt** Each line contains the following parameters (separated by spaces):
     - ifmedian - 0/1, whether to output median values
@@ -41,7 +43,7 @@ The Examples folder contains sample files. Place two files named `EQSource.txt` 
     - Vs30_mpers - Shear wave velocity
     - Z25_km - Depth to the 2.5km/s shear wave velocity horizon, km (if in California or Japan and Z25_km is unknown, input 999)
 
-### Output
+#### Output
 
 1. **IM sim.txt** 
    Each line represents simulation results for one site. The first column is the site ID, and subsequent columns (from the second to the last) are the random simulation results for the site's period (period1 in `SiteFile.txt`)
@@ -50,40 +52,62 @@ The Examples folder contains sample files. Place two files named `EQSource.txt` 
 3. **IM sim with period 0.1.txt** 
    Each line represents simulation results for one site. The first column is the site ID, and subsequent columns (from the second to the last) are the random simulation results for $Sa(T=0.1)$
 
-## CMake Compilation
-1. **Install CMake**: Download and install the appropriate version of CMake for your operating system from the [CMake website](https://cmake.org/download/).
-2. **Install MinGW-w64**: For Windows systems, download from [MinGW-w64](https://github.com/niXman/mingw-builds-binaries/releases) (for Windows 11, this version can be used: `x86_64-14.2.0-release-win32-seh-ucrt-rt_v12-rev0.7z`). After installation, ensure that the MinGW-w64 `bin` directory is added to your system's `PATH` environment variable.
-3. **Modify compiler directory in CMakePresets.json**:
-    ```json
-    {
-        ...
-        "configurePresets": [
-            {
-                "name": "Release",
-                "displayName": "Release",
-                "description": "Using compiler: C = F:\\mingw64\\bin\\gcc.exe, CXX = F:\\mingw64\\bin\\g++.exe",
-                "generator": "MinGW Makefiles",
-                "binaryDir": "${sourceDir}/build/${presetName}",
-                "cacheVariables": {
-                    "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                    "CMAKE_C_COMPILER": "F:/mingw64/bin/gcc.exe",
-                    "CMAKE_CXX_COMPILER": "F:/mingw64/bin/g++.exe",
-                    "CMAKE_BUILD_TYPE": "Release"
-                }
-            }
-        ]
-    }
-    ```
-1. **Compile Release Version**: Create a new build directory in the project root and enter it, then use CMake to generate and compile the Release version build files.
-    ```sh
-    mkdir -p build && cd build
-    cmake --preset Release -S ..
-    cmake --build Release
-    ```
-2. **Run the Executable**: After compilation, you can find the generated executable in the `build` directory and run it.
-    ```sh
-    ./IMSim/IMSim.exe
-    ```
+### Example 2 - Python Import
+
+The Example 2 folder contains a Python module implementation of SpatialIM. This allows you to use the SpatialIM functionality directly within Python.
+
+#### Requirements
+
+1. **Python 3.11**: The module file name is `spatialim.cp311-win_amd64.pyd`, indicating it was compiled for Python 3.11.
+2. **Matching Processor Architecture**: Your Python interpreter must be 64-bit (win_amd64).
+
+#### Usage
+
+1. Copy the `.pyd` file to your Python script directory, then import it:
+   ```python
+   import spatialim
+   ```
+
+2. Create an earthquake source and set parameters:
+   ```python
+   # Create earthquake source
+   eqs = spatialim.EQSource_CB14PCA(lon_0, lat_0)
+   
+   # Set parameters
+   eqs.set_seed(seed)                          # Random number seed
+   eqs.set_W(W)                                # Fault rupture width (km)
+   eqs.set_length(length)                      # Fault rupture length (km)
+   eqs.set_RuptureNormal(normal_x, normal_y, normal_z)  # Normal direction
+   eqs.set_lambda(lambda_angle)                # Rake angle (degrees)
+   eqs.set_Fhw(Fhw)                            # Hanging wall effect
+   eqs.set_Zhyp(Zhyp)                          # Hypocenter depth (km)
+   eqs.set_region(region)                      # Region (1=California)
+   eqs.set_nPCs(nPCs)                          # Number of principal components
+   ```
+
+3. Register sites and run simulations:
+   ```python
+   # Register a site
+   eqs.register_site(
+       site_id,       # ID
+       lon,           # Longitude
+       lat,           # Latitude
+       elevation_km,  # Elevation (km)
+       period,        # Period (s)
+       vs30,          # Vs30 (m/s)
+       z25            # Z25 (km), use 999 if unknown
+   )
+   
+   # Run simulations
+   magnitudes = [M] * N_sim
+   eqs.simulate_intensities(magnitudes, ifmedian=False)
+   
+   # Save results
+   eqs.save_im("IM sim.txt")
+   eqs.save_xy("XY coord.txt")
+   ```
+
+For more detailed instructions, refer to the `README_python_usage.md` and `spatialim_example.py` files in the Example 2 folder.
 
 ## References
 

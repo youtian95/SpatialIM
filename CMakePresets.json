@@ -4,14 +4,14 @@
         {
             "name": "Release",
             "displayName": "Release",
-            "description": "正在使用编译器: C = F:\\mingw64\\bin\\gcc.exe, CXX = F:\\mingw64\\bin\\g++.exe",
-            "generator": "MinGW Makefiles",
+            "description": "使用MSVC编译器构建Release版本（UTF-8编码）",
+            "generator": "Visual Studio 16 2019",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "F:/mingw64/bin/gcc.exe",
-                "CMAKE_CXX_COMPILER": "F:/mingw64/bin/g++.exe",
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS": "/utf-8",
+                "CMAKE_C_FLAGS": "/utf-8"
             }
         }
     ]
