@@ -2,7 +2,7 @@
 
 ## 前提条件
 
-1. **Python 3.11**：您已编译的模块文件名为`spatialim.cp311-win_amd64.pyd`，这表明它是针对Python 3.11编译的。
+1. **Python 3.12**：您已编译的模块文件名为`spatialim.cp312-win_amd64.pyd`，这表明它是针对Python 3.12编译的。
 2. **相同的处理器架构**：您的Python解释器必须是64位的（win_amd64）。
 
 ## 导入模块

@@ -1,0 +1,10 @@
+LICENSE
+MANIFEST.in
+README.md
+pyproject.toml
+spatialim/__init__.py
+spatialim/spatialim.cp312-win_amd64.pyd
+spatialim.egg-info/PKG-INFO
+spatialim.egg-info/SOURCES.txt
+spatialim.egg-info/dependency_links.txt
+spatialim.egg-info/top_level.txt
