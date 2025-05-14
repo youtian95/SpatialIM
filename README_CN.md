@@ -53,12 +53,16 @@ Example 2文件夹包含SpatialIM的Python模块实现。这允许您直接在Py
 
 #### 前提条件
 
-1. **Python 3.11**：模块文件名为`spatialim.cp311-win_amd64.pyd`，这表明它是针对Python 3.11编译的。
+1. **Python 3.12**
 2. **相同的处理器架构**：您的Python解释器必须是64位的（win_amd64）。
 
 #### 使用方法
 
-1. 将`.pyd`文件复制到您的Python脚本目录，然后导入它：
+1. 安装:
+   ```
+   pip install spatialim
+   ```
+1. 导入:
    ```python
    import spatialim
    ```

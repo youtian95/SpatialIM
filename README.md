@@ -58,17 +58,20 @@ The Example 2 folder contains a Python module implementation of SpatialIM. This 
 
 #### Requirements
 
-1. **Python 3.11**: The module file name is `spatialim.cp311-win_amd64.pyd`, indicating it was compiled for Python 3.11.
+1. **Python 3.12**
 2. **Matching Processor Architecture**: Your Python interpreter must be 64-bit (win_amd64).
 
 #### Usage
-
-1. Copy the `.pyd` file to your Python script directory, then import it:
+1. Install it:
+   ```
+   pip install spatialim
+   ```
+1. Import it:
    ```python
    import spatialim
    ```
 
-2. Create an earthquake source and set parameters:
+1. Create an earthquake source and set parameters:
    ```python
    # Create earthquake source
    eqs = spatialim.EQSource_CB14PCA(lon_0, lat_0)
@@ -85,7 +88,7 @@ The Example 2 folder contains a Python module implementation of SpatialIM. This 
    eqs.set_nPCs(nPCs)                          # Number of principal components
    ```
 
-3. Register sites and run simulations:
+5. Register sites and run simulations:
    ```python
    # Register a site
    eqs.register_site(
