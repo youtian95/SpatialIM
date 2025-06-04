@@ -311,7 +311,7 @@ public:
 	}
 
 	static double interp1(VectorXf x, VectorXf y, double vx)
-		//²åÖµ, xµ¥µ÷
+		//ï¿½ï¿½Öµ, xï¿½ï¿½ï¿½ï¿½
 	{
 		assert(x.size() == y.size());
 		if (vx < x[0])
@@ -480,7 +480,7 @@ private:
 		double f2_Rx = h4[ip - 1] + h5[ip - 1] * ((Rx - R1) / (R2 - R1)) + h6[ip - 1] * pow((Rx - R1) / (R2 - R1), 2);
 
 		double f_hngRx;
-		if (Fhw == 0)
+		if (Fhw == 0 || Rx < 0)
 		{
 			f_hngRx = 0;
 		}

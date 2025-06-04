@@ -269,8 +269,9 @@ public:
 					// between-event residuals
 					float PGA_Inter_Res = GMPE::interp1(T_sim, IMNormInterResiduals.row(i), 0.001);
 					// 最后的模拟结果
-					float PGA = exp(log(Median_PGA[0]) + PGA_Inter_Res * tau_PGA[0]
-						+ sqrt(sigma_PGA[0] * sigma_PGA[0] - tau_PGA[0] * tau_PGA[0]) * PGA_Res);
+					float log_PGA = log(Median_PGA[0]) + PGA_Inter_Res * tau_PGA[0]
+						+ sqrt(sigma_PGA[0] * sigma_PGA[0] - tau_PGA[0] * tau_PGA[0]) * PGA_Res;
+					float PGA = exp(log_PGA);
 					// within-event residuals
 					float Sa_Res = GMPE::interp1(T_sim, IMNormResiduals[i].row(j), site.T);
 					// between-event residuals
@@ -1017,13 +1018,18 @@ protected:
 		// return: 点到线段的最小距离
 	{
 		double dis;
-		if ((p - p_1).dot(p_2 - p_1) < 0 || (p - p_2).dot(p_1 - p_2) < 0)
+		double segment_length = (p_1 - p_2).norm();
+		if (segment_length < 1e-9) // Check if p_1 and p_2 are coincident
+		{
+			dis = (p - p_1).norm();
+		}
+		else if ((p - p_1).dot(p_2 - p_1) < 0 || (p - p_2).dot(p_1 - p_2) < 0)
 		{
 			dis = min((p - p_1).norm(), (p - p_2).norm());
 		}
 		else
 		{
-			dis = (p_1 - p).cross(p_2 - p).norm() / (p_1 - p_2).norm();
+			dis = (p_1 - p).cross(p_2 - p).norm() / segment_length;
 		}
 		return dis;
 	}

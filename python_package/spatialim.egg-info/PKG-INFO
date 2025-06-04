@@ -1,10 +1,14 @@
 Metadata-Version: 2.4
 Name: spatialim
-Version: 0.1.1
+Version: 1.1.1
 Summary: 空间相关的地震动强度分布模拟库
 Author-email: Tian You <youtian95@qq.com>
 License-Expression: GPL-3.0-or-later
-Project-URL: Homepage, https://github.com/yourusername/spatialim
+Project-URL: Homepage, https://github.com/youtian95/spatialim
+Project-URL: Documentation, https://github.com/youtian95/spatialim
+Project-URL: Repository, https://github.com/youtian95/spatialim.git
+Project-URL: Changelog, https://github.com/youtian95/spatialim/blob/main/python_package/CHANGELOG.md
+Keywords: earthquake,seismic,simulation,spatial,intensity
 Classifier: Development Status :: 4 - Beta
 Classifier: Intended Audience :: Science/Research
 Classifier: Programming Language :: Python :: 3.12

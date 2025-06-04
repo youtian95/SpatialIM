@@ -13,6 +13,31 @@
                 "CMAKE_CXX_FLAGS": "/utf-8",
                 "CMAKE_C_FLAGS": "/utf-8"
             }
+        },
+        {
+            "name": "Debug",
+            "displayName": "Debug",
+            "description": "使用MSVC编译器构建Debug版本（UTF-8编码，包含调试信息）",
+            "generator": "Visual Studio 16 2019",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": "/utf-8",
+                "CMAKE_C_FLAGS": "/utf-8"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "release",
+            "configurePreset": "Release",
+            "configuration": "Release"
+        },
+        {
+            "name": "debug",
+            "configurePreset": "Debug",
+            "configuration": "Debug"
         }
     ]
 }

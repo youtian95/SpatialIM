@@ -18,5 +18,13 @@ set_target_properties(spatialim PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/python
 )
 
+# 添加自定义命令：构建完成后自动复制.pyd文件到python_package目录
+add_custom_command(TARGET spatialim POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:spatialim>
+        ${CMAKE_SOURCE_DIR}/python_package/spatialim/
+    COMMENT "Copying spatialim.pyd to python_package directory"
+)
+
 # 安装目标
 install(TARGETS spatialim DESTINATION python)

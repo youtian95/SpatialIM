@@ -4,24 +4,31 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spatialim"
-version = "0.1.1"
+version = "1.1.1"
 description = "空间相关的地震动强度分布模拟库"
 readme = "README.md"
 authors = [
     {name = "Tian You", email = "youtian95@qq.com"}
 ]
 license = "GPL-3.0-or-later"
-classifiers = [    "Development Status :: 4 - Beta",
+classifiers = [
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3.12",
     "Operating System :: Microsoft :: Windows",
-    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering"
 ]
+keywords = ["earthquake", "seismic", "simulation", "spatial", "intensity"]
 requires-python = ">=3.12, <3.13"
-urls = {Homepage = "https://github.com/yourusername/spatialim"}
+
+[project.urls]
+Homepage = "https://github.com/youtian95/spatialim"
+Documentation = "https://github.com/youtian95/spatialim"
+Repository = "https://github.com/youtian95/spatialim.git"
+Changelog = "https://github.com/youtian95/spatialim/blob/main/python_package/CHANGELOG.md"
 
 [tool.setuptools]
 packages = ["spatialim"]
 
 [tool.setuptools.package-data]
-spatialim = ["*.pyd"]
+spatialim = ["*.pyd", "*.pyi"]

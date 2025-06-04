@@ -24,6 +24,8 @@ set(BUILD_SHARED_LIBS OFF)
 
 add_subdirectory(ThirdParty)
 add_subdirectory(IMSim)
+add_subdirectory(tests)
 
 # 添加Python绑定模块
 add_subdirectory(python_bindings)
+
