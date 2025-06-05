@@ -1,43 +1,39 @@
-import os
+
 from pathlib import Path
-import sys
-import numpy as np
+import spatialim.plotting
 import matplotlib.pyplot as plt
-from matplotlib import cm
-import pandas as pd
+import numpy as np
 
-src_dir = Path(__file__).resolve().parents[2] / "python_package"
-sys.path.append(str(src_dir))
-
+# ensure the spatialim package has been installed
 import spatialim
 
 # 设置参数
-lon_0, lat_0 = -122.320011, 37.963314  # 震中经纬度
+lon_0, lat_0 = 122.320011, 37.963314  # 震中经纬度
 M = 7.0           # 震级
-N_sim = 100       # 模拟次数
+N_sim = 1       # 模拟次数
 seed = 42         # 随机数种子
 W = 20.0          # 断裂面宽度
 length = 50.0     # 断裂面长度
-normal_x, normal_y, normal_z = 0.318, 0.214, 0.1395  # 法线方向
+normal_x, normal_y, normal_z = 1, 0, 1  # 法线方向
 lambda_angle = 0  # rake角度
-Fhw = 1           # hanging wall效应
+Fhw = 1           # 是否考虑hanging wall效应
 Zhyp = 15.0       # 震源深度
-region = 1        # 区域（加州）
+region = 3        # 区域
 nPCs = 10         # 主成分数
-ifmedian = False  # 是否输出中位值
+ifmedian = True  # 是否只输出中位值
 
 # 定义场地
 sites = []
-for i in range(10):
-    for j in range(10):
+for i in range(100):
+    for j in range(100):
         sites.append([
-            i*10 + j + 1,                            # ID
-            -122.45 + i * 0.01,                      # lon
-            37.78 + j * 0.01,                        # lat
-            0.0,                                     # elevation_km
-            0.1,                                     # T0 (周期)
-            500.0,                                   # Vs30
-            999.0                                    # Z25 (未知)
+            i*100 + j + 1,                       # ID
+            lon_0 + i * 0.01 - 0.5,            # lon
+            lat_0 + j * 0.01 - 0.5,            # lat
+            0.0,                                # elevation_km
+            0.1,                                # T0 (周期)
+            500.0,                              # Vs30
+            999.0                               # Z25 (未知)
         ])
 
 # 创建地震源
@@ -72,16 +68,26 @@ for site in sites:
 magnitudes = [M] * N_sim
 
 # 模拟烈度
-print(f"开始模拟，震级={M}，模拟次数={N_sim}...")
 eqs.simulate_intensities(magnitudes, ifmedian)
 
-# 获取当前工作目录
-work_dir = os.getcwd()
+# 保存结果
+work_dir = Path(__file__).parent.resolve()
+output_file = work_dir / "IM sim.txt"
+eqs.save_im(str(output_file))
+coords_file = work_dir / "XY coord.txt"
+eqs.save_xy(str(coords_file))
 
-# 保存结果到工作目录
-output_file = os.path.join(work_dir, "IM sim.txt")
-eqs.save_im(output_file)
 
-# 保存场地坐标到工作目录
-coords_file = os.path.join(work_dir, "XY coord.txt")
-eqs.save_xy(coords_file)
+plotter = spatialim.plotting.SpatialIMPlotter()
+
+fig = plotter.plot_intensity_contour(
+    str(output_file),
+    str(coords_file),
+    fault_width=W,
+    fault_length=length,
+    rupture_normal=np.array([normal_x, normal_y, normal_z]),
+    show_fault=True
+)
+# 显示图形
+plt.show()
+

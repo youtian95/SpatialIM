@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.2] - 2025-06-05
+
+### Added
+- Python API添加plotting绘图函数
+
 ## [1.1.1] - 2025-06-04
 
 ### Added

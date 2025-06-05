@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: spatialim
-Version: 1.1.1
-Summary: 空间相关的地震动强度分布模拟库
+Version: 1.1.2
+Summary: Spatial earthquake intensity distribution simulation library
 Author-email: Tian You <youtian95@qq.com>
 License-Expression: GPL-3.0-or-later
 Project-URL: Homepage, https://github.com/youtian95/spatialim
@@ -17,6 +17,9 @@ Classifier: Topic :: Scientific/Engineering
 Requires-Python: <3.13,>=3.12
 Description-Content-Type: text/markdown
 License-File: LICENSE
+Requires-Dist: matplotlib
+Requires-Dist: scipy
+Requires-Dist: pandas
 Dynamic: license-file
 
 # SpatialIM

@@ -12,10 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import pandas as pd
 
-# 添加spatialim模块所在的路径，确保可以导入
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(current_dir)
-
+# ensure the spatialim package has been installed
 import spatialim
 
 # 示例：直接使用Python API进行模拟

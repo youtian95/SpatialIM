@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spatialim"
-version = "1.1.1"
-description = "空间相关的地震动强度分布模拟库"
+version = "1.1.2"
+description = "Spatial earthquake intensity distribution simulation library"
 readme = "README.md"
 authors = [
     {name = "Tian You", email = "youtian95@qq.com"}
@@ -20,6 +20,11 @@ classifiers = [
 ]
 keywords = ["earthquake", "seismic", "simulation", "spatial", "intensity"]
 requires-python = ">=3.12, <3.13"
+dependencies = [
+    "matplotlib",
+    "scipy", 
+    "pandas"
+]
 
 [project.urls]
 Homepage = "https://github.com/youtian95/spatialim"
