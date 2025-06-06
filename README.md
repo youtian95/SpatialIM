@@ -3,10 +3,8 @@
 [中文文档](./README_CN.md)
 
 ## Examples
-Below are the spectral acceleration (Sa) distributions at T=0.2, 0.5, and 1.0s for a region under an earthquake:
-![Sa0.2](./Figures/Sa0.2.png)
-![Sa0.5](./Figures/Sa0.5.png)
-![Sa1.0](./Figures/Sa1.0.png)
+Below is the PGA distribution for a magnitude 7 earthquake, with the rectangular box showing the fault projection on the ground surface. Example file: `Examples\Example 2 - python import\example_plot_IM.py`.
+![PGA_contour](./Figures/PGA_contour_M7.png)
 
 ## Usage
 

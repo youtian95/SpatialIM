@@ -1,10 +1,8 @@
 # 地震动强度空间分布随机场模拟
 
 ## 示例
-以下为一次地震下某区域 $T=0.2,\ 0.5,\ 1.0\ \rm{s}$ 时谱加速度 $S_a$ 的分布：
-![Sa0.2](./Figures/Sa0.2.png)
-![Sa0.5](./Figures/Sa0.5.png)
-![Sa1.0](./Figures/Sa1.0.png)
+以下为一次7级地震下PGA的分布，矩形框为断层在地面的投影。例子文件：`Examples\Example 2 - python import\example_plot_IM.py`。
+![PGA_contour](./Figures/PGA_contour_M7.png)
 
 ## 使用
 
