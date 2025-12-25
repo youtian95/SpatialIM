@@ -1,0 +1,12 @@
+/target
+
+/.env
+
+**/__pycache__/
+
+# test results
+**/test_result_*
+/tests/cb14_comp/IM*
+/tests/cb14_comp/
+
+/output/

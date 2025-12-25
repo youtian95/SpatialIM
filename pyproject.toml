@@ -1,0 +1,22 @@
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "spatial_im"
+version = "0.1.0"
+authors = [{name = "Tian You", email = "youtian@njtech.edu.cn"}]
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+[tool.maturin]
+python-source = "python"
+module-name = "spatial_im._spatial_im"
+exclude = ["**/*.pyd", "**/*.so", "**/*.dylib"]
+
+
+

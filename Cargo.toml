@@ -1,0 +1,24 @@
+[package]
+name = "spatial_im_rust"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "_spatial_im"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = { version = "0.27.1", features = ["extension-module"] }
+spade = "2.10"
+nalgebra = "0.34.1"
+ndarray = "0.17.1"
+proj4rs = { version = "0.1.9", features = ["aeqd"] }
+rand = "0.9.2"
+rand_distr = "0.5.1"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+
+
+
+[dev-dependencies]
+approx = "0.5"
