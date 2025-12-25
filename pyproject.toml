@@ -3,20 +3,28 @@ requires = ["maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "spatial_im"
-version = "0.1.0"
+name = "spatialim"
+version = "2.0.0"
+description = "Spatial seismic intensity simulation library"
+readme = "README.md"
 authors = [{name = "Tian You", email = "youtian@njtech.edu.cn"}]
+license = "GPL-3.0-or-later"
 requires-python = ">=3.7"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
+keywords = ["earthquake", "seismic", "simulation", "spatial", "intensity"]
+
+[project.urls]
+Homepage = "https://github.com/youtian95/spatialim"
+Documentation = "https://github.com/youtian95/spatialim"
+Repository = "https://github.com/youtian95/spatialim.git"
+
 
 [tool.maturin]
 python-source = "python"
-module-name = "spatial_im._spatial_im"
+module-name = "spatialim._spatialim"
 exclude = ["**/*.pyd", "**/*.so", "**/*.dylib"]
-
-
 

@@ -1,4 +1,4 @@
-import spatial_im
+import spatialim
 import os
 import sys
 
@@ -25,7 +25,7 @@ def main():
     try:
         # 调用 Rust 编写的模块
         # 参数: 震源文件路径, 场地文件路径, GMPE模型(可选, 默认CB14)
-        spatial_im.run_simulation(
+        spatialim.run_simulation(
             eq_source_path, 
             site_file_path,
             None

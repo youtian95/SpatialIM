@@ -1,6 +1,6 @@
-use _spatial_im::core::io::{parse_eq_source_file, parse_site_file};
-use _spatial_im::core::simulator::Simulator;
-use _spatial_im::run_simulation;
+use _spatialim::core::io::{parse_eq_source_file, parse_site_file};
+use _spatialim::core::simulator::Simulator;
+use _spatialim::run_simulation;
 use std::path::PathBuf;
 
 #[test]
@@ -136,9 +136,9 @@ fn test_csv_site_file_shuffled() {
 
 #[test]
 fn test_grid_simulation_logic() {
-    use _spatial_im::core::site::Site;
-    use _spatial_im::core::eq_source::{EQSource, Region};
-    use _spatial_im::core::simulator::Simulator;
+    use _spatialim::core::site::Site;
+    use _spatialim::core::eq_source::{EQSource, Region};
+    use _spatialim::core::simulator::Simulator;
     use std::path::Path;
     use std::fs::File;
     use std::io::{BufRead, BufReader};
@@ -235,9 +235,9 @@ fn test_grid_simulation_logic() {
 
 #[test]
 fn test_random_median_vs_direct_median() {
-    use _spatial_im::core::site::Site;
-    use _spatial_im::core::eq_source::{EQSource, Region};
-    use _spatial_im::core::simulator::Simulator;
+    use _spatialim::core::site::Site;
+    use _spatialim::core::eq_source::{EQSource, Region};
+    use _spatialim::core::simulator::Simulator;
     use std::path::Path;
     use std::fs::File;
     use std::io::{BufRead, BufReader};

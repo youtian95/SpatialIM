@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-name = "_spatial_im"
+name = "_spatialim"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]

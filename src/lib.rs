@@ -55,7 +55,7 @@ fn run_simulation_py(eq_source_path: &str, site_file_path: &str, gmpe_model: Opt
 // ----------------------------------------------------------------
 
 #[pymodule]
-fn _spatial_im(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _spatialim(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // 注意这里注册的是包装函数 run_simulation_py
     m.add_wrapped(wrap_pyfunction!(run_simulation_py))?;
     Ok(())

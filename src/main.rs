@@ -1,5 +1,5 @@
 
-use _spatial_im::run_simulation;
+use _spatialim::run_simulation;
 use std::env;
 
 /// 程序入口
