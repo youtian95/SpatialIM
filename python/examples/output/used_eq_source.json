@@ -1,0 +1,23 @@
+{
+  "ifmedian": false,
+  "m": 7.0,
+  "n_sim": 10,
+  "seed": 12345,
+  "lon_0": 100.0,
+  "lat_0": 30.0,
+  "w": 31.25344,
+  "length": 42.657986,
+  "rupture_normal": [
+    0.0,
+    1.0,
+    1.0
+  ],
+  "strike": 270.0,
+  "dip": 45.0,
+  "lambda": 0.0,
+  "fhw": true,
+  "zhyp": 10.361311,
+  "z_tor": 0.13463011,
+  "z_bot": 22.23415,
+  "region": "Global"
+}

@@ -1,7 +1,7 @@
 
 /// 线性插值
 /// y = y0 + (y1 - y0) * (x - x0) / (x1 - x0)
-pub fn linear_interp(x0: f64, y0: f64, x1: f64, y1: f64, x: f64) -> f64 {
+pub fn linear_interp(x0: f32, y0: f32, x1: f32, y1: f32, x: f32) -> f32 {
     if (x1 - x0).abs() < 1e-9 {
         return y0;
     }
@@ -13,7 +13,7 @@ pub fn linear_interp(x0: f64, y0: f64, x1: f64, y1: f64, x: f64) -> f64 {
 /// - 在线性插值，并返回插值结果
 /// - 若 `x` 超过上下限，则直接返回上下限对应的值（不外推）
 /// - 若恰好命中某一点（左、右相同），返回该点的值
-pub fn interp_clamped_unsorted(x: f64, xs: &[f64], ys: &[f64]) -> f64 {
+pub fn interp_clamped_unsorted(x: f32, xs: &[f32], ys: &[f32]) -> f32 {
     if xs.is_empty() || ys.is_empty() || xs.len() != ys.len() {
         return 0.0;
     }
@@ -41,8 +41,8 @@ pub fn interp_clamped_unsorted(x: f64, xs: &[f64], ys: &[f64]) -> f64 {
     // 找最近的左点（x_left <= x 且 x_left 最大）与右点（x_right >= x 且 x_right 最小）
     let mut left_idx: Option<usize> = None;
     let mut right_idx: Option<usize> = None;
-    let mut best_left_val = f64::NEG_INFINITY;
-    let mut best_right_val = f64::INFINITY;
+    let mut best_left_val = f32::NEG_INFINITY;
+    let mut best_right_val = f32::INFINITY;
 
     for i in 0..xs.len() {
         let xi = xs[i];

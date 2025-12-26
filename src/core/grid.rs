@@ -3,14 +3,87 @@ use super::geo;
 use spade::{DelaunayTriangulation, Point2, Triangulation, PositionInTriangulation};
 use std::collections::HashMap;
 
+/// 根据给定的经纬度范围生成正方形网格点。
+/// - `min_lon`, `max_lon`, `min_lat`, `max_lat`: 经纬度范围
+/// - `grid_spacing_km`: 网格间距 (km)，默认 0.5 km
+/// 返回 (points, nx, ny)
+pub fn generate_grid_points_from_bounds(
+    min_lon: f32,
+    max_lon: f32,
+    min_lat: f32,
+    max_lat: f32,
+    grid_spacing_km: Option<f32>,
+) -> (Vec<(f32, f32)>, usize, usize) {
+    let lon_0 = min_lon;
+    let lat_0 = min_lat;
+
+    // 投影四个角点以确定 XY 范围
+    let corners = [
+        (min_lon, min_lat),
+        (max_lon, min_lat),
+        (max_lon, max_lat),
+        (min_lon, max_lat),
+    ];
+
+    let mut min_x = f32::INFINITY;
+    let mut max_x = f32::NEG_INFINITY;
+    let mut min_y = f32::INFINITY;
+    let mut max_y = f32::NEG_INFINITY;
+
+    for (lon, lat) in corners.iter() {
+        let (x, y) = geo::latlon2xy(*lon, *lat, lon_0, lat_0);
+        if x < min_x { min_x = x; }
+        if x > max_x { max_x = x; }
+        if y < min_y { min_y = y; }
+        if y > max_y { max_y = y; }
+    }
+    
+    let eps = 1e-6;
+    if (max_x - min_x).abs() < eps { max_x = min_x + eps; }
+    if (max_y - min_y).abs() < eps { max_y = min_y + eps; }
+
+    let range_x = max_x - min_x;
+    let range_y = max_y - min_y;
+
+    let d = grid_spacing_km.unwrap_or(0.5).max(eps);
+
+    let n_intervals_x = (range_x / d).ceil() as usize;
+    let n_intervals_y = (range_y / d).ceil() as usize;
+
+    let total_w = n_intervals_x as f32 * d;
+    let total_h = n_intervals_y as f32 * d;
+
+    // Center the grid
+    let offset_x = (total_w - range_x) / 2.0;
+    let offset_y = (total_h - range_y) / 2.0;
+
+    let start_x = min_x - offset_x;
+    let start_y = min_y - offset_y;
+
+    let nx = n_intervals_x + 1;
+    let ny = n_intervals_y + 1;
+
+    let mut points = Vec::with_capacity(nx * ny);
+    for iy in 0..ny {
+        let y = start_y + (iy as f32) * d;
+        for ix in 0..nx {
+            let x = start_x + (ix as f32) * d;
+            let (lon, lat) = geo::xy2latlon(x, y, lon_0, lat_0);
+            points.push((lon, lat));
+        }
+    }
+
+    (points, nx, ny)
+}
+
 /// 根据给定场地的经纬度范围，生成正方形网格点（经纬度）。
 /// - 网格在局部坐标 (km) 下为正方形，XY 步长一致。
 /// - 通过 `grid_spacing_km` 控制网格边长；若为 `None`，默认 0.5 km（500 m）。
 /// - 返回经纬度点列表以及网格维度 (nx, ny)。
 pub fn generate_grid_points_from_sites(
     sites: &[Site],
-    grid_spacing_km: Option<f64>,
-) -> (Vec<(f64, f64)>, usize, usize) {
+    grid_spacing_km: Option<f32>,
+) -> (Vec<(f32, f32)>, usize, usize) {
     if sites.is_empty() {
         return (Vec::new(), 0, 0);
     }
@@ -29,10 +102,10 @@ pub fn generate_grid_points_from_sites(
 
     // 投影到 XY (km) 以保证网格为正方形
     let eps = 1e-6;
-    let mut min_x = f64::INFINITY;
-    let mut max_x = f64::NEG_INFINITY;
-    let mut min_y = f64::INFINITY;
-    let mut max_y = f64::NEG_INFINITY;
+    let mut min_x = f32::INFINITY;
+    let mut max_x = f32::NEG_INFINITY;
+    let mut min_y = f32::INFINITY;
+    let mut max_y = f32::NEG_INFINITY;
     // 默认参考经纬度使用第一个点
     let lon_0 = sites[0].lon;
     let lat_0 = sites[0].lat;
@@ -59,8 +132,8 @@ pub fn generate_grid_points_from_sites(
     let n_intervals_y = (range_y / d).ceil() as usize;
 
     // 计算总覆盖宽度和高度
-    let total_w = n_intervals_x as f64 * d;
-    let total_h = n_intervals_y as f64 * d;
+    let total_w = n_intervals_x as f32 * d;
+    let total_h = n_intervals_y as f32 * d;
 
     // 计算偏移量，使网格居中于范围
     // 这样起始点和终点距离网格两端（min/max）的距离相同
@@ -78,9 +151,9 @@ pub fn generate_grid_points_from_sites(
     // 在 XY 上生成网格点，再用反投影转换为经纬度
     let mut points = Vec::with_capacity(nx * ny);
     for iy in 0..ny {
-        let y = start_y + (iy as f64) * d;
+        let y = start_y + (iy as f32) * d;
         for ix in 0..nx {
-            let x = start_x + (ix as f64) * d;
+            let x = start_x + (ix as f32) * d;
             let (lon, lat) = geo::xy2latlon(x, y, lon_0, lat_0);
             points.push((lon, lat));
         }
@@ -95,7 +168,7 @@ pub fn generate_grid_points_from_sites(
 /// - `points`: 新的网格经纬度点 (lon, lat)
 /// # 返回：
 /// - 插值后的场地列表
-pub fn interpolate_sites_to_points(sites: &[Site], points: &[(f64, f64)]) -> Vec<Site> {
+pub fn interpolate_sites_to_points(sites: &[Site], points: &[(f32, f32)]) -> Vec<Site> {
     if sites.is_empty() {
         return Vec::new();
     }
@@ -106,7 +179,7 @@ pub fn interpolate_sites_to_points(sites: &[Site], points: &[(f64, f64)]) -> Vec
 
     // 使用 Spade 进行 Delaunay 三角剖分
     // 使用 HashMap 存储 Handle -> Site Index 的映射
-    let mut tri: DelaunayTriangulation<Point2<f64>> = DelaunayTriangulation::new();
+    let mut tri: DelaunayTriangulation<Point2<f32>> = DelaunayTriangulation::new();
     let mut site_map = HashMap::new();
 
     for (i, s) in sites.iter().enumerate() {
@@ -192,7 +265,7 @@ pub fn interpolate_sites_to_points(sites: &[Site], points: &[(f64, f64)]) -> Vec
     result
 }
 
-fn barycentric_coords(p0: &Point2<f64>, p1: &Point2<f64>, p2: &Point2<f64>, p: &Point2<f64>) -> (f64, f64, f64) {
+fn barycentric_coords(p0: &Point2<f32>, p1: &Point2<f32>, p2: &Point2<f32>, p: &Point2<f32>) -> (f32, f32, f32) {
     let det = (p1.y - p2.y) * (p0.x - p2.x) + (p2.x - p1.x) * (p0.y - p2.y);
     if det.abs() < 1e-12 {
         return (1.0/3.0, 1.0/3.0, 1.0/3.0);
@@ -203,8 +276,8 @@ fn barycentric_coords(p0: &Point2<f64>, p1: &Point2<f64>, p2: &Point2<f64>, p: &
     (l0, l1, l2)
 }
 
-fn interpolate_2_sites(s1: &Site, s2: &Site, w1: f64, w2: f64, id: i32, lon: f64, lat: f64) -> Site {
-    let interp = |a: f64, b: f64| w1 * a + w2 * b;
+fn interpolate_2_sites(s1: &Site, s2: &Site, w1: f32, w2: f32, id: i32, lon: f32, lat: f32) -> Site {
+    let interp = |a: f32, b: f32| w1 * a + w2 * b;
     
     let z25 = match (s1.z25, s2.z25) {
         (Some(a), Some(b)) => Some(interp(a, b)),
@@ -225,8 +298,8 @@ fn interpolate_2_sites(s1: &Site, s2: &Site, w1: f64, w2: f64, id: i32, lon: f64
     }
 }
 
-fn interpolate_3_sites(s0: &Site, s1: &Site, s2: &Site, w0: f64, w1: f64, w2: f64, id: i32, lon: f64, lat: f64) -> Site {
-    let interp = |a: f64, b: f64, c: f64| w0 * a + w1 * b + w2 * c;
+fn interpolate_3_sites(s0: &Site, s1: &Site, s2: &Site, w0: f32, w1: f32, w2: f32, id: i32, lon: f32, lat: f32) -> Site {
+    let interp = |a: f32, b: f32, c: f32| w0 * a + w1 * b + w2 * c;
 
     let z25 = match (s0.z25, s1.z25, s2.z25) {
         (Some(a), Some(b), Some(c)) => Some(interp(a, b, c)),

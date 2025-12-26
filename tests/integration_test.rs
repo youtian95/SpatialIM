@@ -16,7 +16,8 @@ fn test_main_function_logic() {
     let result = run_simulation(
         eq_path.to_str().unwrap(),
         site_path.to_str().unwrap(),
-        Some("CB14")
+        Some("CB14"),
+        None
     );
 
     assert!(result.is_ok(), "Simulation failed: {:?}", result.err());
@@ -144,7 +145,7 @@ fn test_grid_simulation_logic() {
     use std::io::{BufRead, BufReader};
 
     // Helper to read a specific value from CSV
-    fn read_csv_val(file_path: &Path, site_idx: usize, sim_idx: usize) -> f64 {
+    fn read_csv_val(file_path: &Path, site_idx: usize, sim_idx: usize) -> f32 {
         let file = File::open(file_path).expect("Failed to open CSV");
         let reader = BufReader::new(file);
         let mut lines = reader.lines();
@@ -164,7 +165,7 @@ fn test_grid_simulation_logic() {
         let parts: Vec<&str> = line.split(',').collect();
         // parts[0] is Site_ID, parts[1] is Sim_1...
         let val_str = parts[sim_idx + 1];
-        val_str.parse::<f64>().expect("Parse error")
+        val_str.parse::<f32>().expect("Parse error")
     }
 
     // 1. Create dummy EQSource with ifmedian=true (Direct Median)
@@ -177,7 +178,9 @@ fn test_grid_simulation_logic() {
         30.0, // lat_0
         Some(10.0), // w
         Some(20.0), // length
-        (1.0, 0.0, 0.0), // rupture_normal (dummy)
+        Some((1.0, 0.0, 0.0)), // rupture_normal (dummy)
+        None, // strike
+        None, // dip
         0.0, // lambda (rake)
         false, // fhw
         Some(10.0), // zhyp
@@ -200,7 +203,8 @@ fn test_grid_simulation_logic() {
     // --- Run 1: Direct Simulation ---
     println!("Running Direct Simulation...");
     let sim_direct = Simulator::new(eq_source.clone(), sites.clone(), "CB14".to_string(), 1)
-        .with_grid_threshold(1000); // Force direct mode
+        .with_grid_threshold(1000) // Force direct mode
+        .with_output_dir(output_dir.to_str().unwrap().to_string());
     sim_direct.run();
     
     // Read all direct values
@@ -213,7 +217,8 @@ fn test_grid_simulation_logic() {
     println!("Running Grid Simulation...");
     let sim_grid = Simulator::new(eq_source.clone(), sites.clone(), "CB14".to_string(), 1)
         .with_grid_threshold(0) // Force grid mode
-        .with_grid_spacing(0.5); 
+        .with_grid_spacing(0.5)
+        .with_output_dir(output_dir.to_str().unwrap().to_string()); 
     sim_grid.run();
 
     // --- Compare ---
@@ -243,7 +248,7 @@ fn test_random_median_vs_direct_median() {
     use std::io::{BufRead, BufReader};
 
     // Helper to read all simulation values for a specific site
-    fn read_site_simulations(file_path: &Path, site_idx: usize) -> Vec<f64> {
+    fn read_site_simulations(file_path: &Path, site_idx: usize) -> Vec<f32> {
         let file = File::open(file_path).expect("Failed to open CSV");
         let reader = BufReader::new(file);
         let mut lines = reader.lines();
@@ -259,13 +264,13 @@ fn test_random_median_vs_direct_median() {
         let line = lines.next().expect("Site row not found").expect("Read error");
         let parts: Vec<&str> = line.split(',').collect();
         // parts[0] is Site_ID, parts[1..] are Sim_1, Sim_2...
-        parts[1..].iter().map(|s| s.parse::<f64>().expect("Parse error")).collect()
+        parts[1..].iter().map(|s| s.parse::<f32>().expect("Parse error")).collect()
     }
 
     // Helper to calculate median of a vector (Geometric Mean: exp(mean(ln(x))))
-    fn calculate_median(vals: Vec<f64>) -> f64 {
-        let sum_ln: f64 = vals.iter().map(|v| v.ln()).sum();
-        let mean_ln = sum_ln / vals.len() as f64;
+    fn calculate_median(vals: Vec<f32>) -> f32 {
+        let sum_ln: f32 = vals.iter().map(|v| v.ln()).sum();
+        let mean_ln = sum_ln / vals.len() as f32;
         mean_ln.exp()
     }
 
@@ -280,10 +285,11 @@ fn test_random_median_vs_direct_median() {
     println!("Running Direct Median Simulation...");
     let eq_source_direct = EQSource::new(
         true, 7.0, 1, 12345, 120.0, 30.0, Some(10.0), Some(20.0), 
-        (1.0, 0.0, 0.0), 0.0, false, Some(10.0), Some(0.0), Some(15.0), Region::Global
+        Some((1.0, 0.0, 0.0)), None, None, 0.0, false, Some(10.0), Some(0.0), Some(15.0), Region::Global
     );
     let sim_direct = Simulator::new(eq_source_direct, sites.clone(), "CB14".to_string(), 1)
-        .with_grid_threshold(1000); // Force direct mode
+        .with_grid_threshold(1000) // Force direct mode
+        .with_output_dir(output_dir.to_str().unwrap().to_string());
     sim_direct.run();
     
     let vals_direct = read_site_simulations(&target_file, 0);
@@ -293,10 +299,11 @@ fn test_random_median_vs_direct_median() {
     println!("Running Random Simulation...");
     let eq_source_random = EQSource::new(
         false, 7.0, 200, 12345, 120.0, 30.0, Some(10.0), Some(20.0), 
-        (1.0, 0.0, 0.0), 0.0, false, Some(10.0), Some(0.0), Some(15.0), Region::Global
+        Some((1.0, 0.0, 0.0)), None, None, 0.0, false, Some(10.0), Some(0.0), Some(15.0), Region::Global
     );
     let sim_random = Simulator::new(eq_source_random, sites.clone(), "CB14".to_string(), 1)
-        .with_grid_threshold(1000);
+        .with_grid_threshold(1000)
+        .with_output_dir(output_dir.to_str().unwrap().to_string());
     sim_random.run();
 
     let vals_random = read_site_simulations(&target_file, 0);

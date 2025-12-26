@@ -37,7 +37,7 @@ pub fn parse_eq_source_file(path: &str) -> Result<(EQSource, usize), Box<dyn Err
         .collect();
 
     // 辅助闭包：解析每一行的第一个字段
-    let parse_line = |index: usize| -> f64 {
+    let parse_line = |index: usize| -> f32 {
         lines[index]
             .split_whitespace()
             .next()
@@ -47,13 +47,13 @@ pub fn parse_eq_source_file(path: &str) -> Result<(EQSource, usize), Box<dyn Err
     };
 
     // 辅助闭包：解析每一行的第一个字段，如果为 999.0 则返回 None
-    let parse_line_opt = |index: usize| -> Option<f64> {
+    let parse_line_opt = |index: usize| -> Option<f32> {
         let val = parse_line(index);
         if val == 999.0 { None } else { Some(val) }
     };
 
     // 特殊处理经纬度行 (第5行: lon_0 lat_0)
-    let coords: Vec<f64> = lines[4]
+    let coords: Vec<f32> = lines[4]
         .split_whitespace()
         .map(|s| s.parse().unwrap_or(0.0))
         .collect();
@@ -61,7 +61,7 @@ pub fn parse_eq_source_file(path: &str) -> Result<(EQSource, usize), Box<dyn Err
     let lat_0 = if coords.len() > 1 { coords[1] } else { 0.0 };
 
     // 特殊处理法线方向行 (第8行: RuptureNormal_x _y _z)
-    let normals: Vec<f64> = lines[7]
+    let normals: Vec<f32> = lines[7]
         .split_whitespace()
         .map(|s| s.parse().unwrap_or(0.0))
         .collect();
@@ -85,7 +85,9 @@ pub fn parse_eq_source_file(path: &str) -> Result<(EQSource, usize), Box<dyn Err
         lat_0,
         parse_line_opt(5),
         parse_line_opt(6),
-        (normal_x, normal_y, normal_z),
+        Some((normal_x, normal_y, normal_z)),
+        None,
+        None,
         parse_line(8),
         parse_line(9) as i32 == 1,
         parse_line_opt(10),
@@ -163,7 +165,7 @@ fn parse_site_file_csv(path: &str) -> io::Result<Vec<Site>> {
     let first_parts: Vec<&str> = trimmed_first.split(',').map(|s| s.trim()).collect();
     
     // 判断是否有标题：检查第一个字段是否无法解析为数字
-    let has_header = first_parts.first().map_or(false, |s| s.parse::<f64>().is_err());
+    let has_header = first_parts.first().map_or(false, |s| s.parse::<f32>().is_err());
 
     // 默认列索引: ID, lon, lat, elevation_km, period1, Vs30_mpers, Z25_km
     let mut col_indices = [0, 1, 2, 3, 4, 5, 6]; 
@@ -219,7 +221,7 @@ fn parse_site_file_csv(path: &str) -> io::Result<Vec<Site>> {
 ///  - `indices`: 各字段在切片中的索引，按顺序为 ID, lon, lat, elevation_km, period1, Vs30_mpers, Z25_km
 fn parse_site_from_parts(parts: &[&str], indices: &[usize; 7]) -> Site {
     // 辅助闭包：根据索引获取字段值
-    let get_val = |idx: usize| -> f64 {
+    let get_val = |idx: usize| -> f32 {
         if idx < parts.len() {
             parts[idx].parse().unwrap_or(0.0)
         } else {
@@ -268,8 +270,8 @@ fn parse_site_from_parts(parts: &[&str], indices: &[usize; 7]) -> Site {
 /// - 内容: 行代表场地，列代表模拟次数
 pub fn save_simulation_results(
     output_dir: &str,
-    periods: &[f64],
-    results: &[DMatrix<f64>],
+    periods: &[f32],
+    results: &[DMatrix<f32>],
 ) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(output_dir)?;
     
@@ -320,8 +322,8 @@ pub fn save_simulation_results(
 /// - `Sim_k` 为第 k 次模拟在该场地周期处的 IM 值
 pub fn save_site_period_results(
     output_dir: &str,
-    site_periods: &[f64],
-    results: &[Vec<f64>],
+    site_periods: &[f32],
+    results: &[Vec<f32>],
 ) -> Result<(), Box<dyn Error>> {
     fs::create_dir_all(output_dir)?;
 

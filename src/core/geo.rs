@@ -2,7 +2,7 @@ use nalgebra::Vector3;
 use proj4rs::proj::Proj;
 use proj4rs::transform::transform;
 
-pub type Vec3 = Vector3<f64>;
+pub type Vec3 = Vector3<f32>;
 
 /// 判断点 p 的垂足是否在四边形 quad 内
 /// quad 必须包含 4 个点
@@ -42,7 +42,7 @@ pub fn footpoint_inside_quad(p: Vec3, quad: &[Vec3]) -> bool {
 }
 
 /// 计算点 p 到线段 p1-p2 的最小距离
-pub fn distance_point_and_line_segment(p: Vec3, p1: Vec3, p2: Vec3) -> f64 {
+pub fn distance_point_and_line_segment(p: Vec3, p1: Vec3, p2: Vec3) -> f32 {
     let segment_length = (p1 - p2).norm();
     if segment_length < 1e-9 {
         return (p - p1).norm();
@@ -57,7 +57,7 @@ pub fn distance_point_and_line_segment(p: Vec3, p1: Vec3, p2: Vec3) -> f64 {
 }
 
 // 坐标转换常量
-// const R_EARTH: f64 = 6371.393; // 地球半径 km (Deprecated, using proj4rs)
+// const R_EARTH: f32 = 6371.393; // 地球半径 km (Deprecated, using proj4rs)
 
 /// 使用等距方位投影 (Azimuthal Equidistant Projection) 将经纬度转换为局部坐标 (km)
 /// 
@@ -69,7 +69,7 @@ pub fn distance_point_and_line_segment(p: Vec3, p1: Vec3, p2: Vec3) -> f64 {
 ///
 /// 返回:
 /// - (x, y): 局部坐标，单位 km。y 轴指向正北，x 轴指向正东。
-pub fn latlon2xy(lon: f64, lat: f64, lon_0: f64, lat_0: f64) -> (f64, f64) {
+pub fn latlon2xy(lon: f32, lat: f32, lon_0: f32, lat_0: f32) -> (f32, f32) {
     // 1. 定义源坐标系 (WGS84 经纬度)
     let wgs84_geo = Proj::from_proj_string(
         "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
@@ -87,9 +87,9 @@ pub fn latlon2xy(lon: f64, lat: f64, lon_0: f64, lat_0: f64) -> (f64, f64) {
     // 3. 准备输入点 (经度, 纬度, 高度)
     // proj4rs 要求输入必须是弧度
     let mut point = (
-        lon.to_radians(), 
-        lat.to_radians(), 
-        0.0
+        (lon as f64).to_radians(), 
+        (lat as f64).to_radians(), 
+        0.0f64
     );
 
     // 4. 执行转换
@@ -97,7 +97,7 @@ pub fn latlon2xy(lon: f64, lat: f64, lon_0: f64, lat_0: f64) -> (f64, f64) {
         .expect("Projection transform failed");
 
     // 5. 返回结果 (转换为 km)
-    (point.0 / 1000.0, point.1 / 1000.0)
+    (point.0 as f32 / 1000.0, point.1 as f32 / 1000.0)
 }
 
 /// 使用等距方位投影 (Azimuthal Equidistant Projection) 的反变换：
@@ -109,7 +109,7 @@ pub fn latlon2xy(lon: f64, lat: f64, lon_0: f64, lat_0: f64) -> (f64, f64) {
 ///
 /// 返回:
 /// - (lon, lat): 经纬度 (度)
-pub fn xy2latlon(x_km: f64, y_km: f64, lon_0: f64, lat_0: f64) -> (f64, f64) {
+pub fn xy2latlon(x_km: f32, y_km: f32, lon_0: f32, lat_0: f32) -> (f32, f32) {
     // 源坐标系为 AEQD（单位 m），目标为 WGS84 经纬度（单位弧度）
     let wgs84_geo = Proj::from_proj_string(
         "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"
@@ -123,28 +123,28 @@ pub fn xy2latlon(x_km: f64, y_km: f64, lon_0: f64, lat_0: f64) -> (f64, f64) {
         .expect("Failed to create AEQD projection");
 
     let mut point = (
-        x_km * 1000.0,
-        y_km * 1000.0,
-        0.0
+        x_km as f64 * 1000.0,
+        y_km as f64 * 1000.0,
+        0.0f64
     );
 
     // AEQD -> WGS84(longlat in radians)
     transform(&aeqd_proj, &wgs84_geo, &mut point)
         .expect("Inverse projection transform failed");
 
-    (point.0.to_degrees(), point.1.to_degrees())
+    (point.0.to_degrees() as f32, point.1.to_degrees() as f32)
 }
 
 /// 计算经度 lon 对应的局部X坐标 (km)，相对于参考经纬度 (lon_0, lat_0)
 /// 注意：需要同时提供 lat 以进行准确投影
-pub fn get_x(lon: f64, lat: f64, lon_0: f64, lat_0: f64) -> f64 {
+pub fn get_x(lon: f32, lat: f32, lon_0: f32, lat_0: f32) -> f32 {
     latlon2xy(lon, lat, lon_0, lat_0).0
 }
 
 
 /// 计算纬度 lat 对应的局部Y坐标 (km)，相对于参考经纬度 (lon_0, lat_0)
 /// 注意：需要同时提供 lon 以进行准确投影
-pub fn get_y(lon: f64, lat: f64, lon_0: f64, lat_0: f64) -> f64 {
+pub fn get_y(lon: f32, lat: f32, lon_0: f32, lat_0: f32) -> f32 {
     latlon2xy(lon, lat, lon_0, lat_0).1
 }
 
@@ -153,7 +153,7 @@ pub fn get_y(lon: f64, lat: f64, lon_0: f64, lat_0: f64) -> f64 {
 /// - site_p: 场地位置，单位 km
 /// - rupture_points: 断层破裂面四个顶点位置 (km)，按顺时针或逆时针顺序排列，矩形中心为原点
 /// - rupture_normal: 断层面法向量
-pub fn calc_rrup(site_p: Vec3, rupture_points: &[Vec3], rupture_normal: Vec3) -> f64 {
+pub fn calc_rrup(site_p: Vec3, rupture_points: &[Vec3], rupture_normal: Vec3) -> f32 {
     if footpoint_inside_quad(site_p, rupture_points) {
         let normal = rupture_normal.normalize();
         (rupture_points[0] - site_p).dot(&(-normal)).abs()
@@ -170,7 +170,7 @@ pub fn calc_rrup(site_p: Vec3, rupture_points: &[Vec3], rupture_normal: Vec3) ->
 /// 输入:
 /// - site_p: 场地位置，单位 km
 /// - rupture_points: 断层破裂面四个顶点位置 (km)，按顺时针或逆时针顺序排列
-pub fn calc_rjb(site_p: Vec3, rupture_points: &[Vec3]) -> f64 {
+pub fn calc_rjb(site_p: Vec3, rupture_points: &[Vec3]) -> f32 {
     // 投影到 z=0
     let mut rupture_points_proj = rupture_points.to_vec();
     for p in &mut rupture_points_proj {
@@ -197,7 +197,7 @@ pub fn calc_rjb(site_p: Vec3, rupture_points: &[Vec3]) -> f64 {
 /// - site_p: 场地位置，单位 km
 /// - rupture_points: 断层破裂面四个顶点位置 (km)，按顺时针或逆时针顺序排列
 /// - rupture_normal: 断层面法向量
-pub fn calc_rx(site_p: Vec3, rupture_points: &[Vec3], rupture_normal: Vec3) -> f64 {
+pub fn calc_rx(site_p: Vec3, rupture_points: &[Vec3], rupture_normal: Vec3) -> f32 {
     // 投影到 z=0
     let mut rupture_points_proj = rupture_points.to_vec();
     for p in &mut rupture_points_proj {
@@ -231,7 +231,7 @@ pub fn calc_rx(site_p: Vec3, rupture_points: &[Vec3], rupture_normal: Vec3) -> f
 mod tests {
     use super::*;
 
-    const EPSILON: f64 = 1e-6;
+    const EPSILON: f32 = 1e-6;
 
     #[test]
     fn test_get_x_y() {

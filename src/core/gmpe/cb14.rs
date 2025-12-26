@@ -4,7 +4,7 @@ use crate::core::site::Site;
 
 
 /// 标准周期列表
-pub const PERIODS_21: [f64; 21] = [
+pub const PERIODS_21: [f32; 21] = [
     0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3,
     0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0, 7.5, 10.0,
 ];
@@ -13,20 +13,20 @@ pub const PERIODS_21: [f64; 21] = [
 #[derive(Debug, Clone)]
 struct Coefficient {
     /// 对应 periods_21 的 PSA 系数
-    psa: Vec<f64>,
+    psa: Vec<f32>,
     /// PGA 系数
-    pga: f64,
+    pga: f32,
     /// PGV 系数
-    pgv: f64,
+    pgv: f32,
 }
 
 impl Coefficient {
-    fn new(psa: Vec<f64>, pga: f64, pgv: f64) -> Self {
+    fn new(psa: Vec<f32>, pga: f32, pgv: f32) -> Self {
         Self { psa, pga, pgv }
     }
 
     /// 根据 IMType 获取对应的系数值
-    fn get(&self, im_type: IMType) -> f64 {
+    fn get(&self, im_type: IMType) -> f32 {
         match im_type {
             IMType::PGA => self.pga,
             IMType::PGV => self.pgv,
@@ -149,7 +149,7 @@ impl CB14 {
     }
 
     /// 计算给定周期 T 下的对数地震动强度，返回 ln(Y)，可能是 PGA, PGV, PSA(T)
-    fn calc_log_y(&self, eq: &EQSource, site: &Site, t: f64, im_type: IMType) -> f64 {
+    fn calc_log_y(&self, eq: &EQSource, site: &Site, t: f32, im_type: IMType) -> f32 {
         // Interpolation for non-standard periods
         if let IMType::PSA(period) = im_type {
             let periods = &PERIODS_21;
@@ -207,7 +207,7 @@ impl CB14 {
             vs30: 1100.0,
             ..site.clone()
         };
-        let a1100: Option<f64> = if vs30 >= 1100.0 {
+        let a1100: Option<f32> = if vs30 >= 1100.0 {
             // 此时是基岩，不需要迭代计算基岩PGA a1100
             None
         } else {
@@ -238,7 +238,7 @@ impl CB14 {
     }
 
     /// Magnitude Term
-    fn f_mag(&self, mag: f64, im_type: IMType) -> f64 {
+    fn f_mag(&self, mag: f32, im_type: IMType) -> f32 {
         let c0 = self.c0.get(im_type);
         let c1 = self.c1.get(im_type);
         let c2 = self.c2.get(im_type);
@@ -256,7 +256,7 @@ impl CB14 {
     }
 
     /// Geometric Attenuation Term
-    fn f_dis(&self, mag: f64, r_rup: f64,  im_type: IMType) -> f64 {
+    fn f_dis(&self, mag: f32, r_rup: f32,  im_type: IMType) -> f32 {
         let c5 = self.c5.get(im_type);
         let c6 = self.c6.get(im_type);
         let c7 = self.c7.get(im_type);
@@ -265,7 +265,7 @@ impl CB14 {
     }
 
     /// Faulting Style Term
-    fn f_flt(&self, mag: f64, f_rv: bool, f_nm: bool, im_type: IMType) -> f64 {
+    fn f_flt(&self, mag: f32, f_rv: bool, f_nm: bool, im_type: IMType) -> f32 {
         let c8 = self.c8.get(im_type);
         let c9 = self.c9.get(im_type);
 
@@ -286,7 +286,7 @@ impl CB14 {
     }
 
     /// Hanging Wall Term
-    fn f_hng(&self, mag: f64, r_rup: f64, r_jb: f64, r_x: f64, w: f64, dip: f64, z_tor: f64, im_type: IMType) -> f64 {
+    fn f_hng(&self, mag: f32, r_rup: f32, r_jb: f32, r_x: f32, w: f32, dip: f32, z_tor: f32, im_type: IMType) -> f32 {
         let c10 = self.c10.get(im_type);
         if c10 == 0.0 { return 0.0; }
 
@@ -346,7 +346,7 @@ impl CB14 {
     /// - a1100: PGA on rock (vs30 = 1100 m/s) in g
     /// - im_type: Intensity Measure Type (PGA, PGV, PSA(T))
     /// - sj: Japan site condition flag. If true, apply Japan-specific site term adjustments.
-    fn f_site(&self, vs30: f64, a1100: Option<f64>, im_type: IMType, sj: bool) -> f64 {
+    fn f_site(&self, vs30: f32, a1100: Option<f32>, im_type: IMType, sj: bool) -> f32 {
         let c11 = self.c11.get(im_type);
         let k1 = self.k1.get(im_type);
         let k2 = self.k2.get(im_type);
@@ -380,7 +380,7 @@ impl CB14 {
     }
 
     /// Sediment Depth Term
-    fn f_sed(&self, z25: f64, sj: bool, im_type: IMType) -> f64 {
+    fn f_sed(&self, z25: f32, sj: bool, im_type: IMType) -> f32 {
         let c14 = self.c14.get(im_type);
         let c15 = self.c15.get(im_type);
         let c16 = self.c16.get(im_type);
@@ -393,12 +393,12 @@ impl CB14 {
         } else if z25 <= 3.0 {
             0.0
         } else {
-            c16 * k3 * (-0.75f64).exp() * (1.0 - (-0.25 * (z25 - 3.0)).exp())
+            c16 * k3 * (-0.75f32).exp() * (1.0 - (-0.25 * (z25 - 3.0)).exp())
         }
     }
 
     /// Hypocenter Depth Term
-    fn f_hyp(&self, zhyp: f64, mag: f64, im_type: IMType) -> f64 {
+    fn f_hyp(&self, zhyp: f32, mag: f32, im_type: IMType) -> f32 {
         let c17 = self.c17.get(im_type);
         let c18 = self.c18.get(im_type);
 
@@ -422,7 +422,7 @@ impl CB14 {
     }
 
     /// Fault Dip Term
-    fn f_dip(&self, mag: f64, dip: f64, im_type: IMType) -> f64 {
+    fn f_dip(&self, mag: f32, dip: f32, im_type: IMType) -> f32 {
         let c19 = self.c19.get(im_type);
         
         if mag <= 4.5 {
@@ -435,7 +435,7 @@ impl CB14 {
     }
 
     /// Anelastic Attenuation Term
-    fn f_atn(&self, r_rup: f64, region: Region, im_type: IMType) -> f64 {
+    fn f_atn(&self, r_rup: f32, region: Region, im_type: IMType) -> f32 {
         if r_rup <= 80.0 {
             return 0.0;
         }
@@ -451,7 +451,7 @@ impl CB14 {
     }
     
     /// standard deviations
-    pub fn calc_std_log_y(&self, eq: &EQSource, site: &Site, im_type: IMType) -> (f64, f64, f64) {
+    pub fn calc_std_log_y(&self, eq: &EQSource, site: &Site, im_type: IMType) -> (f32, f32, f32) {
         // Interpolation for non-standard periods
         if let IMType::PSA(period) = im_type {
             let periods = &PERIODS_21;
@@ -544,7 +544,7 @@ impl CB14 {
         (sigma, tau, phi)
     }
 
-    fn get_tau_ln_y(&self, mag: f64, im_type: IMType) -> f64 {
+    fn get_tau_ln_y(&self, mag: f32, im_type: IMType) -> f32 {
         let tau1 = self.tau1.get(im_type);
         let tau2 = self.tau2.get(im_type);
         if mag <= 4.5 {
@@ -556,7 +556,7 @@ impl CB14 {
         }
     }
 
-    fn get_phi_ln_y(&self, mag: f64, im_type: IMType) -> f64 {
+    fn get_phi_ln_y(&self, mag: f32, im_type: IMType) -> f32 {
         let phi1 = self.phi1.get(im_type);
         let phi2 = self.phi2.get(im_type);
         if mag <= 4.5 {
@@ -568,7 +568,7 @@ impl CB14 {
         }
     }
 
-    fn calc_alpha(&self, vs30: f64, a1100: f64, im_type: IMType) -> f64 {
+    fn calc_alpha(&self, vs30: f32, a1100: f32, im_type: IMType) -> f32 {
         let k1 = self.k1.get(im_type);
         if vs30 >= k1 {
             return 0.0;
@@ -642,11 +642,11 @@ mod tests {
         
         // Table C1 Data
         struct Scenario {
-            m: f64,
-            z_bot: f64,
-            w: f64,
-            z_tor: f64,
-            z_hyp: f64,
+            m: f32,
+            z_bot: f32,
+            w: f32,
+            z_tor: f32,
+            z_hyp: f32,
         }
 
         let scenarios = vec![
@@ -660,7 +660,7 @@ mod tests {
         // Distances to calculate (R_rup)
         // Log-spaced roughly from 0.1 to 300
         let mut r_rups = vec![];
-        let mut r = 0.1f64;
+        let mut r = 0.1f32;
         while r <= 800.0 {
             r_rups.push(r);
             r *= 1.1; // Step factor
@@ -704,7 +704,9 @@ mod tests {
                     0.0, 0.0, // Epicenter
                     Some(s.w),
                     None, // Length unknown
-                    (1.0, 0.0, 0.0), // Normal along X (East) -> Strike North (Y), Dip 90.
+                    Some((1.0, 0.0, 0.0)), // Normal along X (East) -> Strike North (Y), Dip 90.
+                    None, 
+                    None,
                     0.0, // Strike-slip
                     false, // No HW
                     Some(s.z_hyp),
@@ -744,11 +746,11 @@ mod tests {
         
         // Table C2 Data
         struct Scenario {
-            m: f64,
-            z_bot: f64,
-            w: f64,
-            z_tor: f64,
-            z_hyp: f64,
+            m: f32,
+            z_bot: f32,
+            w: f32,
+            z_tor: f32,
+            z_hyp: f32,
         }
 
         let scenarios = vec![
@@ -768,7 +770,7 @@ mod tests {
 
         // Log-spaced R_rup from 0.1 to 800
         let mut r_rups = vec![];
-        let mut r = 0.1f64;
+        let mut r = 0.1f32;
         while r <= 800.0 {
             r_rups.push(r);
             r *= 1.1; 
@@ -793,9 +795,9 @@ mod tests {
                 // Region 3: Site is "beyond" the bottom edge extension. Closest point is bottom edge.
                 //           R_rup^2 = (Rx - W*cos(delta))^2 + Z_rup_bot^2
                 
-                let cos_45 = 45.0f64.to_radians().cos();
-                let sin_45 = 45.0f64.to_radians().sin();
-                let tan_45 = 45.0f64.to_radians().tan();
+                let cos_45 = 45.0f32.to_radians().cos();
+                let sin_45 = 45.0f32.to_radians().sin();
+                let tan_45 = 45.0f32.to_radians().tan();
                 
                 let z_rup_bot = s.z_tor + s.w * sin_45;
                 
@@ -840,7 +842,9 @@ mod tests {
                     0.0, 0.0, // Center at 0,0
                     Some(s.w),
                     None, // Length unknown
-                    (0.70710678, 0.0, 0.70710678), // Normal for 45 deg dip towards +X.
+                    Some((0.70710678, 0.0, 0.70710678)), // Normal for 45 deg dip towards +X.
+                    None, 
+                    None,
                     90.0, // Reverse
                     true, // Hanging Wall Effect
                     Some(s.z_hyp),
@@ -901,10 +905,10 @@ mod tests {
         let site = Site::new(0, 0.0, 0.0, 0.0, 0.0, 1500.0, Some(0.0), false);
 
         // Case 1: M <= 4.5 (e.g., M=4.0)
-        let eq_low_m = EQSource::new(true, 4.0, 0, 0, 0.0, 0.0, Some(0.0), Some(0.0), (0.0, 1.0, 0.0), 0.0, false, Some(0.0), Some(0.0), Some(0.0), Region::Global);
+        let eq_low_m = EQSource::new(true, 4.0, 0, 0, 0.0, 0.0, Some(0.0), Some(0.0), Some((0.0, 1.0, 0.0)), None, None, 0.0, false, Some(0.0), Some(0.0), Some(0.0), Region::Global);
 
         // Case 2: M >= 5.5 (e.g., M=6.0)
-        let eq_high_m = EQSource::new(true, 6.0, 0, 0, 0.0, 0.0, Some(0.0), Some(0.0), (0.0, 1.0, 0.0), 0.0, false, Some(0.0), Some(0.0), Some(0.0), Region::Global);
+        let eq_high_m = EQSource::new(true, 6.0, 0, 0, 0.0, 0.0, Some(0.0), Some(0.0), Some((0.0, 1.0, 0.0)), None, None, 0.0, false, Some(0.0), Some(0.0), Some(0.0), Region::Global);
 
         for (t, sigma_ref_l, sigma_ref_h) in data {
             let im_type = IMType::PSA(t);

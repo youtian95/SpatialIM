@@ -16,11 +16,17 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 keywords = ["earthquake", "seismic", "simulation", "spatial", "intensity"]
+dependencies = [
+    "matplotlib",
+    "scipy", 
+    "pandas"
+]
 
 [project.urls]
 Homepage = "https://github.com/youtian95/spatialim"
-Documentation = "https://github.com/youtian95/spatialim"
+Documentation = "https://github.com/youtian95/spatialim/blob/rust/README.md"
 Repository = "https://github.com/youtian95/spatialim.git"
+Changelog = "https://github.com/youtian95/spatialim/blob/rust/CHANGELOG.md"
 
 
 [tool.maturin]

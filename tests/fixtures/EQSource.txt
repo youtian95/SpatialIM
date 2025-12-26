@@ -1,0 +1,13 @@
+0       # ifmedian: 0/1
+7.0     # M: Magnitude
+5       # N_sim: Number of simulations
+12345   # seed: Random seed
+120.0 30.0 # lon_0, lat_0: Epicenter coordinates
+15.0    # W: Down-dip width (km)
+50.0    # length: Rupture length (km)
+0.0 1.0 1.0 # RuptureNormal: x, y, z
+90.0    # lambda: Rake angle
+0       # Fhw: Hanging wall effect (0/1)
+10.0    # Zhyp: Hypocentral depth (km)
+3       # region: 0=Global, 1=CA, 3=CN/TR, 4=IT
+5       # nPCs: Number of Principal Components

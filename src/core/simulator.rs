@@ -18,23 +18,34 @@ pub struct Simulator {
     /// 场地列表
     sites: Vec<Site>,
     gmpe_model_name: String,
-    pub periods: Vec<f64>,
+    pub periods: Vec<f32>,
     /// 事件内残差模拟时 PCA 分量数量
     n_pcs: usize,
     /// 如果场地数量超过grid_threshold则启用网格模拟
     grid_threshold: usize,
     /// 网格模拟时的网格边长 (km)，None 表示使用默认值 0.5 km
-    grid_spacing_km: Option<f64>,
+    grid_spacing_km: Option<f32>,
+    /// 输出目录
+    output_dir: String,
 }
 
 impl Simulator {
     /// 创建新的模拟器实例
     pub fn new(eq_source: EQSource, sites: Vec<Site>, gmpe_model_name: String, n_pcs: usize) -> Self {
         // 定义模拟周期 (这里使用常用的周期列表，也可以根据需求调整)
-        let periods = vec![
+        let periods: Vec<f32> = vec![
             0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 4.0, 5.0
         ];
-        Self { eq_source, sites, gmpe_model_name, periods, n_pcs, grid_threshold: 500, grid_spacing_km: None }
+        Self { 
+            eq_source, 
+            sites, 
+            gmpe_model_name, 
+            periods, 
+            n_pcs, 
+            grid_threshold: 500, 
+            grid_spacing_km: None,
+            output_dir: "output".to_string(),
+        }
     }
 
     /// 设置启用网格模拟的场地数量阈值（默认 500）
@@ -44,18 +55,36 @@ impl Simulator {
     }
 
     /// 设置网格间距 (km)
-    pub fn with_grid_spacing(mut self, spacing: f64) -> Self {
+    pub fn with_grid_spacing(mut self, spacing: f32) -> Self {
         self.grid_spacing_km = Some(spacing);
+        self
+    }
+
+    /// 设置输出目录
+    pub fn with_output_dir(mut self, output_dir: String) -> Self {
+        self.output_dir = output_dir;
         self
     }
 
     /// 运行模拟流程
     pub fn run(&self) {
-        println!("=== 开始地震动强度模拟 ===");
+        println!("\n=== 开始地震动强度模拟 ===");
         println!("震源震级: M{}", self.eq_source.m);
         println!("模拟次数: {}", self.eq_source.n_sim);
         println!("场地数量: {}", self.sites.len());
         println!("GMPE模型: {}", self.gmpe_model_name);
+
+        // 确保输出目录存在
+        if !std::path::Path::new(&self.output_dir).exists() {
+            std::fs::create_dir_all(&self.output_dir).expect("Failed to create output directory");
+        }
+
+        // 0. 补全并保存震源参数
+        let used_eq_source = self.eq_source.clone();
+        let eq_json_path = std::path::Path::new(&self.output_dir).join("used_eq_source.json");
+        let eq_json_file = std::fs::File::create(&eq_json_path).expect("Failed to create used_eq_source.json");
+        serde_json::to_writer_pretty(eq_json_file, &used_eq_source).expect("Failed to write used_eq_source.json");
+        println!("已保存使用的震源参数至: {:?}", eq_json_path);
 
         // 1. 初始化 GMPE 模型
         let gmpe_model = gmpe::create_gmpe_model(&self.gmpe_model_name)
@@ -64,7 +93,7 @@ impl Simulator {
         // 2. 遍历所有场地，计算中值 (Median) 和标准差 (Tau, Phi)
         println!("\n[Step 1/4] 计算 GMPE 中值和标准差...");
         let use_grid = self.sites.len() > self.grid_threshold;
-        let (sim_sites, sim_coords_xy): (Vec<Site>, (Vec<f64>, Vec<f64>)) = if use_grid {
+        let (sim_sites, sim_coords_xy): (Vec<Site>, (Vec<f32>, Vec<f32>)) = if use_grid {
             // 生成网格点并构造网格场地（属性通过 Delaunay 插值自原始场地）
             // 使用默认 0.5 km 的网格边长；如需可配置，可在此传入 Some(value)
             let (grid_points, _nx, _ny) = grid::generate_grid_points_from_sites(&self.sites, self.grid_spacing_km);
@@ -75,8 +104,8 @@ impl Simulator {
 
             for (lon, lat) in grid_points.iter() {
                 let (x, y) = geo::latlon2xy(*lon, *lat, self.eq_source.lon_0, self.eq_source.lat_0);
-                gx.push(x);
-                gy.push(y);
+                gx.push(x as f32);
+                gy.push(y as f32);
             }
 
             (sim_sites, (gx, gy))
@@ -86,8 +115,8 @@ impl Simulator {
             let mut y_coords = Vec::with_capacity(self.sites.len());
             for s in &self.sites {
                 let (x, y) = geo::latlon2xy(s.lon, s.lat, self.eq_source.lon_0, self.eq_source.lat_0);
-                x_coords.push(x);
-                y_coords.push(y);
+                x_coords.push(x as f32);
+                y_coords.push(y as f32);
             }
             (self.sites.clone(), (x_coords, y_coords))
         };
@@ -101,11 +130,11 @@ impl Simulator {
         for (i, site) in sim_sites.iter().enumerate() {
             for (j, &t) in self.periods.iter().enumerate() {
                 let mut site_t = site.clone();
-                site_t.period1 = t;
+                site_t.period1 = t as f32;
                 if let Ok(res) = gmpe_model.calc(&self.eq_source, &site_t) {
-                    median_matrix[(i, j)] = res.psa_median;
-                    phi_matrix[(i, j)] = res.psa_phi;
-                    tau_matrix[(i, j)] = res.psa_tau;
+                    median_matrix[(i, j)] = res.psa_median as f32;
+                    phi_matrix[(i, j)] = res.psa_phi as f32;
+                    tau_matrix[(i, j)] = res.psa_tau as f32;
                 }
             }
         }
@@ -168,14 +197,14 @@ impl Simulator {
         };
 
         // 保存所有周期的结果
-        let output_dir = "output";
+        let output_dir = &self.output_dir;
         match io::save_simulation_results(output_dir, &self.periods, &total_ims) {
             Ok(_) => println!("  - 全部周期结果已保存至 {} 目录", output_dir),
             Err(e) => println!("  - 保存全部周期结果失败: {}", e),
         }
 
         // 保存场地文件指定周期的插值结果至单独文件
-        let site_periods: Vec<f64> = self.sites.iter().map(|s| s.period1).collect();
+        let site_periods: Vec<f32> = self.sites.iter().map(|s| s.period1).collect();
         match io::save_site_period_results(output_dir, &site_periods, &site_period_results) {
             Ok(_) => println!("  - 场地指定周期插值结果已单独保存"),
             Err(e) => println!("  - 保存场地指定周期插值结果失败: {}", e),
@@ -199,11 +228,11 @@ impl Simulator {
     fn combine_results(
         n_sites: usize,
         n_periods: usize,
-        median_matrix: &DMatrix<f64>,
-        b_res_results: &[DMatrix<f64>],
-        w_res_results: &[DMatrix<f64>],
+        median_matrix: &DMatrix<f32>,
+        b_res_results: &[DMatrix<f32>],
+        w_res_results: &[DMatrix<f32>],
         n_sim: usize,
-    ) -> Vec<DMatrix<f64>> {
+    ) -> Vec<DMatrix<f32>> {
         let mut total_ims = Vec::with_capacity(n_sim);
 
         for k in 0..n_sim {
@@ -232,22 +261,22 @@ impl Simulator {
     /// - `site_period_results`: [n_sims]，每次模拟一个向量 [n_sites]，为各场地在其 `period1` 处的 IM（经插值）
     fn interpolate_to_site_periods(
         sites: &[Site],
-        total_ims: &[DMatrix<f64>],
-        periods: &[f64],
-    ) -> Vec<Vec<f64>> {
+        total_ims: &[DMatrix<f32>],
+        periods: &[f32],
+    ) -> Vec<Vec<f32>> {
         let n_sim = total_ims.len();
         let n_sites = sites.len();
         let n_periods = periods.len();
-        let mut site_period_results: Vec<Vec<f64>> = Vec::with_capacity(n_sim);
+        let mut site_period_results: Vec<Vec<f32>> = Vec::with_capacity(n_sim);
 
         for k in 0..n_sim {
             let sim_matrix = &total_ims[k];
             let mut site_vec = vec![0.0; n_sites];
 
             for i in 0..n_sites {
-                let target_t = sites[i].period1;
+                let target_t = sites[i].period1 as f32;
                 // 收集当前行的值以便插值
-                let row_vals: Vec<f64> = (0..n_periods)
+                let row_vals: Vec<f32> = (0..n_periods)
                     .map(|jj| sim_matrix[(i, jj)])
                     .collect();
                 site_vec[i] = utilities::interp_clamped_unsorted(target_t, periods, &row_vals);
@@ -268,10 +297,10 @@ impl Simulator {
     /// - `site_total_ims`: 场地位置的总 IM 结果，[n_sims]，每个元素为矩阵 [n_sites x n_periods]
     fn interpolate_grid_to_sites(
         &self,
-        grid_total_ims: &[DMatrix<f64>],
-        grid_xy: &(Vec<f64>, Vec<f64>),
+        grid_total_ims: &[DMatrix<f32>],
+        grid_xy: &(Vec<f32>, Vec<f32>),
         sites: &[Site],
-    ) -> Vec<DMatrix<f64>> {
+    ) -> Vec<DMatrix<f32>> {
         let n_grid = grid_xy.0.len();
         let n_sites = sites.len();
         let n_periods = self.periods.len();
@@ -282,11 +311,11 @@ impl Simulator {
         let mut sy = Vec::with_capacity(n_sites);
         for s in sites {
             let (x, y) = geo::latlon2xy(s.lon, s.lat, self.eq_source.lon_0, self.eq_source.lat_0);
-            sx.push(x);
-            sy.push(y);
+            sx.push(x as f32);
+            sy.push(y as f32);
         }
 
-        let mut site_total_ims: Vec<DMatrix<f64>> = Vec::with_capacity(n_sims);
+        let mut site_total_ims: Vec<DMatrix<f32>> = Vec::with_capacity(n_sims);
 
         for k in 0..n_sims {
             let mut mat = DMatrix::zeros(n_sites, n_periods);

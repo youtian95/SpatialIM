@@ -10,28 +10,28 @@ use crate::core::site::Site;
 pub enum IMType {
     PGA,
     PGV,
-    /// f64 表示周期 T
-    PSA(f64),
+    /// f32 表示周期 T
+    PSA(f32),
 }
 
 #[derive(Debug)]
 #[allow(dead_code)]
 pub struct GMPEResult {
-    pub psa_median: f64,
+    pub psa_median: f32,
     /// PSA 标准差
-    pub psa_sigma: f64,
+    pub psa_sigma: f32,
     /// PSA 事件间标准差
-    pub psa_tau: f64,
+    pub psa_tau: f32,
     /// PSA 事件内标准差
-    pub psa_phi: f64,
-    pub pga_median: f64,
-    pub pga_sigma: f64,
-    pub pga_tau: f64,
-    pub pga_phi: f64,
-    pub pgv_median: f64,
-    pub pgv_sigma: f64,
-    pub pgv_tau: f64,
-    pub pgv_phi: f64,
+    pub psa_phi: f32,
+    pub pga_median: f32,
+    pub pga_sigma: f32,
+    pub pga_tau: f32,
+    pub pga_phi: f32,
+    pub pgv_median: f32,
+    pub pgv_sigma: f32,
+    pub pgv_tau: f32,
+    pub pgv_phi: f32,
 }
 
 /// GMPE 模型特征（接口）
@@ -66,7 +66,9 @@ mod tests {
             0.0,
             Some(10.0),
             Some(20.0),
-            (0.0, 1.0, 1.0), // 45 degree dip
+            Some((0.0, 1.0, 1.0)), // 45 degree dip
+            None,
+            None,
             0.0,
             true,
             Some(10.0),

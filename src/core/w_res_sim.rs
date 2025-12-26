@@ -8,17 +8,17 @@ use rand_distr::{Normal, Distribution};
 /// 变差函数模型结构体 / Variogram model struct
 #[derive(Debug, Clone)]
 struct ModelVario {
-    cn: f64,
-    c1: f64,
-    a1: f64,
-    c2: f64,
-    a2: f64,
+    cn: f32,
+    c1: f32,
+    a1: f32,
+    c2: f32,
+    a2: f32,
     type_: String, // "nug" or "iso nest"
 }
 
 impl ModelVario {
     /// 创建 Nugget 模型
-    fn new_nug(cn: f64) -> Self {
+    fn new_nug(cn: f32) -> Self {
         Self {
             cn,
             c1: 0.0,
@@ -30,7 +30,7 @@ impl ModelVario {
     }
 
     /// 创建 Isotropic Nested 模型
-    fn new_iso_nest(cn: f64, c1: f64, a1: f64, c2: f64, a2: f64) -> Self {
+    fn new_iso_nest(cn: f32, c1: f32, a1: f32, c2: f32, a2: f32) -> Self {
         Self {
             cn,
             c1,
@@ -50,15 +50,15 @@ pub struct WResSimulator {
     /// 主成分数量
     n_pcs: usize,
     /// 模拟周期列表
-    t_periods: DVector<f64>,
+    t_periods: DVector<f32>,
     /// PCA 系数矩阵
-    pca_coefs: DMatrix<f64>,
+    pca_coefs: DMatrix<f32>,
     /// 方差缩放因子
-    variance_scale_factor: DVector<f64>,
+    variance_scale_factor: DVector<f32>,
     /// 变差函数模型列表
     model_vario: Vec<ModelVario>,
     /// 分解后的协方差矩阵 (L 矩阵)
-    l_matrices: Vec<DMatrix<f64>>, 
+    l_matrices: Vec<DMatrix<f32>>, 
     /// 随机数生成器
     rng: StdRng,
 }
@@ -137,8 +137,11 @@ impl WResSimulator {
     /// 
     /// 计算场地间的距离矩阵，并根据距离矩阵和变差函数模型构建协方差矩阵。
     /// 对协方差矩阵进行 Cholesky 分解（或特征值分解作为回退），用于后续的随机场生成。
-    pub fn register_sites(&mut self, x: &DVector<f64>, y: &DVector<f64>) {
-        let _n_locs = x.len();
+    pub fn register_sites(&mut self, x: &DVector<f32>, y: &DVector<f32>) {
+        let n_locs = x.len();
+
+        self.check_registration_memory(n_locs);
+
         let distance_matrix = Self::get_distance_matrix(x, y);
 
         // Scale variance if less than 19 principal components are used
@@ -187,21 +190,27 @@ impl WResSimulator {
     /// * `phi_matrix` - 可选的事件内标准差矩阵 [n_locs x n_periods]，用于缩放残差。如果没有提供，那么输出的残差的标准差为 1。
     /// 
     /// # 返回
-    ///  - `Vec<DMatrix<f64>>`，其中每个矩阵代表一次模拟结果。
+    ///  - `Vec<DMatrix<f32>>`，其中每个矩阵代表一次模拟结果。
     ///     矩阵维度为 [n_locs x n_periods]。
     pub fn simulate_residuals(
         &mut self, 
-        t_sim: &DVector<f64>, 
+        t_sim: &DVector<f32>, 
         n_sims: usize,
-        phi_matrix: Option<&DMatrix<f64>>
-    ) -> Vec<DMatrix<f64>> {
+        phi_matrix: Option<&DMatrix<f32>>
+    ) -> Vec<DMatrix<f32>> {
+        if self.l_matrices.is_empty() {
+            panic!("Sites not registered! Call register_sites first.");
+        }
         let n_locs = self.l_matrices[0].nrows();
+
+        Self::check_simulation_memory(n_locs, n_sims, t_sim.len());
         
         // Simulate each of the PC's
         // sim_PCA: Vector of Matrices [nLocs x nsims]
         let mut sim_pca = Vec::with_capacity(self.n_pcs);
-        let normal = Normal::new(0.0, 1.0).unwrap();
+        let normal = Normal::new(0.0f32, 1.0f32).unwrap();
 
+        println!("  - Simulating Principal Components...");
         for i_pc in 0..self.n_pcs {
             // L * randN
             // We can do this efficiently by generating a large random matrix
@@ -223,6 +232,7 @@ impl WResSimulator {
             sim_results.push(DMatrix::zeros(n_locs, t_sim.len()));
         }
 
+        println!("  - Transforming to spectral acceleration residuals...");
         for (i, &t_val) in t_sim.iter().enumerate() {
             // Find if t_val is in self.t_periods
             let index_opt = self.t_periods.iter().position(|&x| (x - t_val).abs() < 1e-6);
@@ -273,8 +283,42 @@ impl WResSimulator {
         sim_results
     }
 
+    /// 检查注册场地时的内存使用
+    fn check_registration_memory(&self, n_locs: usize) {
+        // 估算需要的内存: distance_matrix + l_matrices * n_pcs
+        // 每个 f32 占 4 字节
+        let estimated_elements = (n_locs as usize).pow(2) * (1 + self.n_pcs);
+        let estimated_bytes = estimated_elements * 4;
+        let estimated_gb = estimated_bytes as f32 / 1024.0 / 1024.0 / 1024.0;
+
+        if estimated_gb > 4.0 {
+            println!("[WResSimulator] Warning: High memory usage predicted for site registration.");
+            println!("  - Sites: {}, PCs: {}", n_locs, self.n_pcs);
+            println!("  - Estimated memory for matrices: {:.2} GB", estimated_gb);
+            println!("  - To avoid OOM, consider reducing the number of sites.");
+            if estimated_gb > 8.0 {
+                eprintln!("  - DANGER: Memory usage is very high. Process may be killed.");
+            }
+        }
+    }
+
+    /// 检查模拟时的内存使用
+    fn check_simulation_memory(n_locs: usize, n_sims: usize, n_periods: usize) {
+        let out_elements = (n_sims as u64) * (n_locs as u64) * (n_periods as u64);
+        let out_gb = (out_elements as f32 * 4.0) / (1024.0 * 1024.0 * 1024.0);
+
+        if out_gb > 4.0 {
+            println!("[WResSimulator] Warning: High memory usage for simulation output.");
+            println!("  - Simulations: {}", n_sims);
+            println!("  - Sites: {}", n_locs);
+            println!("  - Periods: {}", n_periods);
+            println!("  - Estimated output memory: {:.2} GB", out_gb);
+            println!("  - To avoid OOM, consider reducing n_sims or processing in batches.");
+        }
+    }
+
     /// 计算距离矩阵
-    fn get_distance_matrix(x: &DVector<f64>, y: &DVector<f64>) -> DMatrix<f64> {
+    fn get_distance_matrix(x: &DVector<f32>, y: &DVector<f32>) -> DMatrix<f32> {
         let n = x.len();
         let mut dist = DMatrix::zeros(n, n);
         for i in 0..n {
@@ -287,7 +331,7 @@ impl WResSimulator {
     }
 
     /// 计算协方差矩阵
-    fn get_covariance(dist: &DMatrix<f64>, model: &ModelVario) -> DMatrix<f64> {
+    fn get_covariance(dist: &DMatrix<f32>, model: &ModelVario) -> DMatrix<f32> {
         if model.type_ == "iso nest" {
             Self::get_iso_nested_cov(model, dist)
         } else {
@@ -295,7 +339,7 @@ impl WResSimulator {
         }
     }
 
-    fn get_iso_nested_cov(model: &ModelVario, dist: &DMatrix<f64>) -> DMatrix<f64> {
+    fn get_iso_nested_cov(model: &ModelVario, dist: &DMatrix<f32>) -> DMatrix<f32> {
         let var = model.cn + model.c1 + model.c2;
         let mut cov = DMatrix::zeros(dist.nrows(), dist.ncols());
         
@@ -312,7 +356,7 @@ impl WResSimulator {
         cov
     }
 
-    fn get_nug_cov(model: &ModelVario, dist: &DMatrix<f64>) -> DMatrix<f64> {
+    fn get_nug_cov(model: &ModelVario, dist: &DMatrix<f32>) -> DMatrix<f32> {
         let mut cov = DMatrix::zeros(dist.nrows(), dist.ncols());
         for i in 0..dist.len() {
             if dist[i] == 0.0 {
@@ -325,7 +369,7 @@ impl WResSimulator {
     }
 
     /// 线性插值函数
-    fn interp1(x: &DVector<f64>, y: &DVector<f64>, vx: f64) -> f64 {
+    fn interp1(x: &DVector<f32>, y: &DVector<f32>, vx: f32) -> f32 {
         if vx < x[0] {
             y[0] + (y[1] - y[0]) / (x[1] - x[0]) * (vx - x[0])
         } else if vx > x[x.len() - 1] {
@@ -343,6 +387,8 @@ impl WResSimulator {
         }
     }
 }
+
+
 
 #[cfg(test)]
 mod tests {
@@ -364,7 +410,7 @@ mod tests {
         let mut x = DVector::zeros(n_sites);
         let mut y = DVector::zeros(n_sites);
         for i in 0..n_sites {
-            x[i] = i as f64 * spacing;
+            x[i] = i as f32 * spacing;
             y[i] = 0.0;
         }
 
@@ -403,7 +449,7 @@ mod tests {
             
             for s_idx in 0..n_sites {
                 let vals = &period_data[p_idx][s_idx];
-                let mean = vals.iter().sum::<f64>() / n_sims as f64;
+                let mean = vals.iter().sum::<f32>() / n_sims as f32;
                 let mut centered = Vec::with_capacity(n_sims);
                 let mut sum_sq = 0.0;
                 for &v in vals {
@@ -432,7 +478,7 @@ mod tests {
         writeln!(file, "{}", header).unwrap();
 
         for lag in 0..n_sites {
-            let dist = lag as f64 * spacing;
+            let dist = lag as f32 * spacing;
             let mut row = format!("{:.4}", dist);
 
             for idx1 in 0..periods.len() {
@@ -460,7 +506,7 @@ mod tests {
                         }
                     }
                     
-                    let avg_rho = if count > 0 { sum_rho / count as f64 } else { 0.0 };
+                    let avg_rho = if count > 0 { sum_rho / count as f32 } else { 0.0 };
                     row.push_str(&format!(",{:.6}", avg_rho));
                 }
             }
@@ -482,7 +528,7 @@ mod tests {
         let mut x = DVector::zeros(n_sites);
         let mut y = DVector::zeros(n_sites);
         for i in 0..n_sites {
-            x[i] = i as f64 * spacing;
+            x[i] = i as f32 * spacing;
             y[i] = 0.0;
         }
 
@@ -518,7 +564,7 @@ mod tests {
         writeln!(file, "{}", header).unwrap();
 
         for lag in 0..n_sites {
-            let dist = lag as f64 * spacing;
+            let dist = lag as f32 * spacing;
             let mut row = format!("{:.4}", dist);
 
             for p_idx in 0..periods.len() {
@@ -539,7 +585,7 @@ mod tests {
                 }
                 
                 let gamma = if count > 0 { 
-                    0.5 * sum_sq_diff / count as f64 
+                    0.5 * sum_sq_diff / count as f32 
                 } else { 
                     0.0 
                 };
@@ -549,3 +595,4 @@ mod tests {
         }
     }
 }
+

@@ -4,9 +4,15 @@
 
 **/__pycache__/
 
+# Python bytecode files
+**/*.pyd
+
 # test results
 **/test_result_*
 /tests/cb14_comp/IM*
 /tests/cb14_comp/
 
-/output/
+**/output/
+!python/examples/output/
+
+

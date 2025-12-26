@@ -104,7 +104,7 @@ fn main() {
         None
     };
 
-    if let Err(e) = run_simulation(eq_source_path, site_file_path, gmpe_model) {
+    if let Err(e) = run_simulation(eq_source_path, site_file_path, gmpe_model, None) {
         eprintln!("错误: {}", e);
         std::process::exit(1);
     }

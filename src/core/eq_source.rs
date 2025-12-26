@@ -1,6 +1,6 @@
 use super::geo::{self, Vec3};
 use super::site::Site;
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 use serde::{Serialize, Deserialize};
 
 /// 区域代码枚举
@@ -32,40 +32,47 @@ pub struct EQSource {
     /// 是否计算中值 (1: 是, 0: 否)
     pub ifmedian: bool,
     /// 矩震级 (Moment Magnitude)
-    pub m: f64,
+    pub m: f32,
     /// 模拟次数
     pub n_sim: usize,
     /// 随机数种子
     pub seed: u64,
     /// 震中经度 (度)
-    pub lon_0: f64,
+    pub lon_0: f32,
     /// 震中纬度 (度)
-    pub lat_0: f64,
+    pub lat_0: f32,
     /// 断层宽度 (km)
     #[serde(default)]
-    pub w: Option<f64>,
+    pub w: Option<f32>,
     /// 断层长度 (km)
     #[serde(default)]
-    pub length: Option<f64>,
+    pub length: Option<f32>,
     /// 断层破裂面法向量 (x, y, z)，Z 方向向上
-    pub rupture_normal: (f64, f64, f64),
+    #[serde(default)]
+    pub rupture_normal: Option<(f32, f32, f32)>,
+    /// 走向 (Strike, 度)
+    #[serde(default)]
+    pub strike: Option<f32>,
+    /// 倾角 (Dip, 度)
+    #[serde(default)]
+    pub dip: Option<f32>,
     /// 滑动角 (Rake Angle, 度)。取值范围 [-180, 180]。
     /// * 0: 左旋走滑 (Left-lateral strike-slip)
     /// * 90: 逆断层 (Reverse)
     /// * -90: 正断层 (Normal)
     /// * 180/-180: 右旋走滑 (Right-lateral strike-slip)
-    pub lambda: f64,
+    pub lambda: f32,
     /// 是否考虑上盘效应 (Hanging Wall Effect)
     pub fhw: bool,
     /// 震源深度 (km)
     #[serde(default)]
-    pub zhyp: Option<f64>,
+    pub zhyp: Option<f32>,
     /// 断层顶部深度 (km)，如果未知则为 None
     #[serde(default)]
-    pub z_tor: Option<f64>,
+    pub z_tor: Option<f32>,
     /// 断层底部深度 (km)，如果未知则为 None
     #[serde(default)]
-    pub z_bot: Option<f64>,
+    pub z_bot: Option<f32>,
     /// 区域代码
     pub region: Region,
 }
@@ -84,7 +91,9 @@ impl EQSource {
     /// * `lat_0` - 震中纬度 (必须)
     /// * `w` - 断层宽度 (可选)。如果未知，请传入 `None`，程序将自动估算。
     /// * `length` - 断层长度 (可选)。如果未知，请传入 `None`，程序将自动估算。
-    /// * `rupture_normal` - 断层破裂面法向量 (必须)
+    /// * `rupture_normal` - 断层破裂面法向量 (可选)，或者提供 Strike 和 Dip。如果都提供了，以 `rupture_normal` 为准。
+    /// * `strike` - 走向 (可选)
+    /// * `dip` - 倾角 (可选)
     /// * `lambda` - 滑动角 (必须)
     /// * `fhw` - 是否考虑上盘效应 (必须)
     /// * `zhyp` - 震源深度 (可选)。如果未知，请传入 `None`，程序将自动估算。
@@ -93,19 +102,21 @@ impl EQSource {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         ifmedian: bool,
-        m: f64,
+        m: f32,
         n_sim: usize,
         seed: u64,
-        lon_0: f64,
-        lat_0: f64,
-        w: Option<f64>,
-        length: Option<f64>,
-        rupture_normal: (f64, f64, f64),
-        lambda: f64,
+        lon_0: f32,
+        lat_0: f32,
+        w: Option<f32>,
+        length: Option<f32>,
+        rupture_normal: Option<(f32, f32, f32)>,
+        strike: Option<f32>,
+        dip: Option<f32>,
+        lambda: f32,
         fhw: bool,
-        zhyp: Option<f64>,
-        z_tor: Option<f64>,
-        z_bot: Option<f64>,
+        zhyp: Option<f32>,
+        z_tor: Option<f32>,
+        z_bot: Option<f32>,
         region: Region,
     ) -> Self {
         let mut eq = EQSource {
@@ -118,6 +129,8 @@ impl EQSource {
             w,
             length,
             rupture_normal,
+            strike,
+            dip,
             lambda,
             fhw,
             zhyp,
@@ -139,13 +152,23 @@ impl EQSource {
     }
 
     fn estimate_unknown_parameters(&mut self) {
+        // 0. Estimate Rupture Normal if missing
+        if self.rupture_normal.is_none() {
+            if let (Some(strike), Some(dip)) = (self.strike, self.dip) {
+                let n = Self::strike_dip_2_rupture_normal(strike, dip);
+                self.rupture_normal = Some((n.x, n.y, n.z));
+            } else {
+                panic!("Must provide either 'rupture_normal' or both 'strike' and 'dip'.");
+            }
+        }
+
         let delta = self.delta();
         let sin_delta = delta.to_radians().sin();
 
         // Internal helper functions
 
         // Wells and Coppersmith (1994) - Length
-        let calc_length = |m: f64, lambda: f64| -> f64 {
+        let calc_length = |m: f32, lambda: f32| -> f32 {
             let (a, b) = if lambda.abs() <= 45.0 || lambda.abs() >= 135.0 {
                 // strike-slip
                 (-3.55, 0.74)
@@ -159,12 +182,12 @@ impl EQSource {
                 // unknown
                 (-3.22, 0.69)
             };
-            10.0f64.powf(a + b * m)
+            10.0f32.powf(a + b * m)
         };
 
         // Wells and Coppersmith (1994) - Width
-        let calc_width_wc94 = |m: f64| -> f64 {
-            let w_wc = 10.0f64.powf((m - 4.07) / 0.98).sqrt();
+        let calc_width_wc94 = |m: f32| -> f32 {
+            let w_wc = 10.0f32.powf((m - 4.07) / 0.98).sqrt();
              
             w_wc
         };
@@ -172,22 +195,22 @@ impl EQSource {
         // Kaklamanos et al. (2011) - Width
         // J Kaklamanos, L G Baise, D M Boore. Estimating Unknown Input Parameters when Implementing the NGA Ground-Motion Prediction Equations in Engineering Practice. Earthquake Spectra, 2011, 27(4): 1219-1235.
 
-        let _calc_width_kaklamanos = |mag: f64, lambda: f64| -> f64 {
+        let _calc_width_kaklamanos = |mag: f32, lambda: f32| -> f32 {
             let abs_lambda = lambda.abs();
             if abs_lambda <= 45.0 || abs_lambda >= 135.0 {
                 // strike-slip
-                10.0f64.powf(-0.76 + 0.27 * mag)
+                10.0f32.powf(-0.76 + 0.27 * mag)
             } else if lambda > 45.0 && lambda < 135.0 {
                 // reverse
-                10.0f64.powf(-1.61 + 0.41 * mag)
+                10.0f32.powf(-1.61 + 0.41 * mag)
             } else {
                 // normal
-                10.0f64.powf(-1.14 + 0.35 * mag)
+                10.0f32.powf(-1.14 + 0.35 * mag)
             }
         };
 
         // Equations 4 and 5 in Chiou and Youngs (2014)
-        let calc_z_tor = |m: f64, is_reverse: bool| -> f64 {
+        let calc_z_tor = |m: f32, is_reverse: bool| -> f32 {
             if is_reverse {
                 let val = (m - 5.849).max(0.0);
                 (2.704 - 1.226 * val).max(0.0).powi(2)
@@ -198,7 +221,7 @@ impl EQSource {
         };
 
         // Campbell and Bozorgnia (2013) - Z_HYP
-        let calc_zhyp = |m: f64, delta: f64, z_bot: f64, z_tor: f64, _w: f64, _sin_delta: f64| -> f64 {
+        let calc_zhyp = |m: f32, delta: f32, z_bot: f32, z_tor: f32, _w: f32, _sin_delta: f32| -> f32 {
             let z_bot_eff = z_bot;
 
             let f_dz_m = if m < 6.75 {
@@ -256,8 +279,9 @@ impl EQSource {
 
 
     /// 计算断层倾角 (Dip Angle, delta)
-    pub fn delta(&self) -> f64 {
-        let normal = Vec3::new(self.rupture_normal.0, self.rupture_normal.1, self.rupture_normal.2).normalize();
+    pub fn delta(&self) -> f32 {
+        let rn = self.rupture_normal.expect("Rupture normal should be set");
+        let normal = Vec3::new(rn.0, rn.1, rn.2).normalize();
         let z_unit = Vec3::new(0.0, 0.0, 1.0);
         (normal.dot(&z_unit).abs()).acos() / PI * 180.0
     }
@@ -278,7 +302,7 @@ impl EQSource {
     }
 
     /// 计算 Rrup (Rupture Distance): 场地到断层破裂面的最短距离，单位 km
-    pub fn calc_rrup(&self, site: &Site) -> f64 {
+    pub fn calc_rrup(&self, site: &Site) -> f32 {
         let (x, y) = geo::latlon2xy(site.lon, site.lat, self.lon_0, self.lat_0);
         
         // Site Z relative to Hypocenter (which is at 0,0,0 in rupture_4_points)
@@ -289,13 +313,14 @@ impl EQSource {
         let site_p = Vec3::new(x, y, z);
         
         let rupture_points = self.rupture_4_points();
-        let normal = Vec3::new(self.rupture_normal.0, self.rupture_normal.1, self.rupture_normal.2);
+        let rn = self.rupture_normal.expect("Rupture normal should be set");
+        let normal = Vec3::new(rn.0, rn.1, rn.2);
         
         geo::calc_rrup(site_p, &rupture_points, normal)
     }
 
     /// 计算 Rjb (Joyner-Boore Distance): 场地到断层破裂面在地表投影的最短距离，单位 km
-    pub fn calc_rjb(&self, site: &Site) -> f64 {
+    pub fn calc_rjb(&self, site: &Site) -> f32 {
         let (x, y) = geo::latlon2xy(site.lon, site.lat, self.lon_0, self.lat_0);
         let z = 0.0;
         let site_p = Vec3::new(x, y, z);
@@ -306,13 +331,14 @@ impl EQSource {
     }
 
     /// 计算 Rx: 场地到断层迹线（或其延伸线）的水平垂直距离，单位 km
-    pub fn calc_rx(&self, site: &Site) -> f64 {
+    pub fn calc_rx(&self, site: &Site) -> f32 {
         let (x, y) = geo::latlon2xy(site.lon, site.lat, self.lon_0, self.lat_0);
         let z = 0.0;
         let site_p = Vec3::new(x, y, z);
         
         let rupture_points = self.rupture_4_points();
-        let normal = Vec3::new(self.rupture_normal.0, self.rupture_normal.1, self.rupture_normal.2);
+        let rn = self.rupture_normal.expect("Rupture normal should be set");
+        let normal = Vec3::new(rn.0, rn.1, rn.2);
         
         geo::calc_rx(site_p, &rupture_points, normal)
     }
@@ -327,7 +353,8 @@ impl EQSource {
     ///
     /// 即：P1 -> P2 (上边缘), P3 -> P4 (下边缘)
     pub fn rupture_4_points(&self) -> Vec<Vec3> {
-        let normal = Vec3::new(self.rupture_normal.0, self.rupture_normal.1, self.rupture_normal.2).normalize();
+        let rn = self.rupture_normal.expect("Rupture normal should be set");
+        let normal = Vec3::new(rn.0, rn.1, rn.2).normalize();
         let z_unit = Vec3::new(0.0, 0.0, 1.0);
         let mut hor_unit = z_unit.cross(&normal);
         
@@ -383,7 +410,7 @@ impl EQSource {
     /// 
     /// 返回
     ///  - 法向量 (x, y, z)，其中 z 向上
-    pub fn strike_dip_2_rupture_normal(strike_deg: f64, dip_deg: f64) -> Vec3 {
+    pub fn strike_dip_2_rupture_normal(strike_deg: f32, dip_deg: f32) -> Vec3 {
         let strike_rad = strike_deg.to_radians();
         let dip_rad = dip_deg.to_radians();
         
@@ -401,10 +428,10 @@ impl EQSource {
 
     /// 将断层破裂面法向量转换为走向 (Strike) 和 倾角 (Dip)
     /// 返回: (Strike, Dip) 单位为度
-    pub fn rupture_normal_2_strike_dip(normal: Vec3) -> (f64, f64) {
+    pub fn rupture_normal_2_strike_dip(normal: Vec3) -> (f32, f32) {
         let n = normal.normalize();
         // 确保法向量指向上方 (z >= 0)
-        let n = if n.z < 0.0 { -n } else { n };
+        let n = if n.z < -1e-6 { -n } else { n };
         
         let dip_rad = n.z.acos();
         let dip_deg = dip_rad.to_degrees();
@@ -449,7 +476,9 @@ mod tests {
             30.0,
             Some(10.0),
             Some(20.0),
-            (0.0, 1.0, 1.0), // 45 degree dip
+            Some((0.0, 1.0, 1.0)), // 45 degree dip
+            None,
+            None,
             0.0,
             true,
             Some(10.0),
@@ -459,7 +488,7 @@ mod tests {
         )
     }
 
-    fn create_dummy_site(lon: f64, lat: f64) -> Site {
+    fn create_dummy_site(lon: f32, lat: f32) -> Site {
         Site {
             id: 1,
             lon,
@@ -479,15 +508,15 @@ mod tests {
         let mut eq = create_dummy_eq_source();
         
         // Vertical fault (normal along Y)
-        eq.rupture_normal = (0.0, 1.0, 0.0);
+        eq.rupture_normal = Some((0.0, 1.0, 0.0));
         assert_relative_eq!(eq.delta(), 90.0, epsilon = 1e-6);
 
         // Horizontal fault (normal along Z)
-        eq.rupture_normal = (0.0, 0.0, 1.0);
+        eq.rupture_normal = Some((0.0, 0.0, 1.0));
         assert_relative_eq!(eq.delta(), 0.0, epsilon = 1e-6);
 
         // 45 degree dip
-        eq.rupture_normal = (0.0, 1.0, 1.0);
+        eq.rupture_normal = Some((0.0, 1.0, 1.0));
         assert_relative_eq!(eq.delta(), 45.0, epsilon = 1e-6);
     }
 
@@ -497,7 +526,7 @@ mod tests {
         eq.length = Some(20.0);
         eq.w = Some(10.0);
         // fault along X axis
-        eq.rupture_normal = (0.0, 1.0, 1.0);
+        eq.rupture_normal = Some((0.0, 1.0, 1.0));
         
         let points = eq.rupture_4_points();
         assert_eq!(points.len(), 4);
@@ -522,7 +551,7 @@ mod tests {
     fn test_calc_rrup() {
         let mut eq = create_dummy_eq_source();
         eq.zhyp = Some(10.0);
-        eq.rupture_normal = (0.0, 1.0, 0.0); // Vertical fault
+        eq.rupture_normal = Some((0.0, 1.0, 0.0)); // Vertical fault
         eq.w = Some(10.0); 
         eq.length = Some(10.0); 
         // Set z_tor to make fault centered at zhyp
@@ -543,7 +572,7 @@ mod tests {
     fn test_calc_rjb() {
         let mut eq = create_dummy_eq_source();
         eq.zhyp = Some(10.0);
-        eq.rupture_normal = (0.0, 1.0, 0.0); // Vertical fault
+        eq.rupture_normal = Some((0.0, 1.0, 0.0)); // Vertical fault
         eq.w = Some(10.0);
         eq.length = Some(10.0);
         eq.z_tor = Some(eq.zhyp.unwrap() - eq.w.unwrap() / 2.0);
@@ -566,10 +595,10 @@ mod tests {
     fn test_calc_rx() {
         let mut eq = create_dummy_eq_source();
         eq.zhyp = Some(10.0);
-        eq.rupture_normal = (0.0, 1.0, 1.0); // 45 degree dip
+        eq.rupture_normal = Some((0.0, 1.0, 1.0)); // 45 degree dip
         eq.w = Some(10.0);
         // Set z_tor consistent with centered hypocenter
-        let sin_delta = 45.0f64.to_radians().sin();
+        let sin_delta = 45.0f32.to_radians().sin();
         eq.z_tor = Some(eq.zhyp.unwrap() - (eq.w.unwrap() / 2.0) * sin_delta);
         
         // Check dip direction
@@ -592,7 +621,7 @@ mod tests {
         // Normal is (0, 1, 1), so dip direction is +Y.
         // Up-dip direction is -Y.
         // Top edge is at -5 * cos(45).
-        let fault_trace_y = -5.0 * (45.0_f64.to_radians()).cos();
+        let fault_trace_y = -5.0 * (45.0_f32.to_radians()).cos();
         
         let expected_rx = site_y - fault_trace_y;
         assert_relative_eq!(rx_hw, expected_rx, epsilon = 1e-5);

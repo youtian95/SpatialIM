@@ -1,46 +1,91 @@
-# 地震动强度空间分布随机场模拟
+# Spatially Correlated Ground-Motion Intensity Simulation
 
-## 示例
-以下为一次7级地震下PGA的分布，矩形框为断层在地面的投影。例子文件：`Examples\Example 2 - python import\example_plot_IM.py`。
-![PGA_contour](./Figures/PGA_contour_M7.png)
+[中文文档](https://github.com/youtian95/spatialim/blob/rust/README_CN.md)
 
-## Python中使用
+This package provides a fast tool to simulate spatially correlated ground-motion intensity measures based on established ground-motion prediction equations (GMPEs) and spatial correlation models.
 
-`python/examples`文件夹包含示例
+## Examples
+The `python/examples` folder contains a magnitude-7 scenario. Below is one random simulation of Sa (T = 1 s); the rectangle shows the surface projection of the fault:
+![plot_sim1](python/examples/output/plot_sim1.png)
+Median of 10 simulations for Sa (T = 1 s):
+![plot_median](python/examples/output/plot_median.png)
 
-### 使用方法
+## Python Usage
 
-1. 安装:
+1. Install the package:
    ```
    pip install spatialim
    ```
-1. 导入:
-   ```python
-   import spatialim
+2. The `python/examples/demo.py` script demonstrates how to run the spatial ground-motion simulation end to end.
+
+## References
+
+1. K. W. Campbell, Y. Bozorgnia. NGA-West2 Ground Motion Model for the Average Horizontal Components of PGA, PGV, and 5% Damped Linear Acceleration Response Spectra. Earthquake Spectra, 2014, 30(3): 1087-1115.
+2. N. Jayaram, J. W. Baker. Correlation model for spatially distributed ground-motion intensities. Earthquake Engineering & Structural Dynamics, 2009, 38(15): 1687-1708.
+3. K. Goda. Interevent Variability of Spatial Correlation of Peak Ground Motions and Response Spectra. Bulletin of the Seismological Society of America, 2011, 101(5): 2522-2531.
+4. M. Markhvida, L. Ceferino, J. W. Baker. Modeling spatially correlated spectral accelerations at multiple periods using principal component analysis and geostatistics. Earthquake Engineering & Structural Dynamics, 2018, 47(5): 1107-1123.
+
+## Developer Notes
+
+### Code Structure
+
+Core logic lives in `src/core/`:
+
+- `simulator.rs`: orchestrates GMPE evaluation and residual simulation
+- Feature modules
+  - `io.rs`: input/output handling
+  - `geo.rs`: distance calculations and related helpers
+  - `site.rs`: site definitions
+  - `eq_source.rs`: earthquake source definitions
+  - `utilities.rs`: common utility functions
+- Core modules
+  - `gmpe`: ground-motion prediction equations (currently CB14)
+  - `b_res_sim.rs`: between-event residual simulation
+  - `w_res_sim.rs`: within-event residual simulation
+
+### Packaging for Python
+
+1. Install `maturin`:
+   ```
+   pip install maturin
+   ```
+2. Update `Cargo.toml` with:
+   ```toml
+   [lib]
+   name = "_spatialim"
+   crate-type = ["cdylib", "rlib"]
+
+   [dependencies]
+   pyo3 = { version = "0.27.1", features = ["extension-module"] }
+   ```
+3. Add `pyproject.toml`:
+   ```toml
+   [build-system]
+   requires = ["maturin>=1.0,<2.0"]
+   build-backend = "maturin"
+
+   [tool.maturin]
+   python-source = "python"
+   module-name = "spatialim._spatialim"
+   exclude = ["**/*.pyd", "**/*.so", "**/*.dylib"]
+   ```
+   Other fields follow a standard `pyproject.toml`.
+4. Create the `python` directory:
+   ```
+   python/
+   ├── spatialim/
+   │   ├── __init__.py
+   │   ├── _spatialim.pyi  # type hints
+   │   └── other modules
+   └── setup.py
+   ```
+5. For local development, install into your active Python environment:
+   ```
+   maturin develop --release
+   ```
+6. Build distributable wheels:
+   ```
+   maturin build --release
    ```
 
-## 代码结构
 
-核心逻辑位于 `src/core/` 目录下：
-
- - `simulator.rs`: 模拟器，负责调用 GMPE 和残差模拟
- - 功能模块
-   - `io.rs`: 处理输入输出文件
-   - `geo.rs`: 提供距离计算等功能
-   - `site.rs`: 定义场地
-   - `eq_source.rs`: 定义震源
-   - `utilities.rs`: 提供通用工具函数
- - 核心模块
-   - `gmpe`: 提供各种GMPE模型，目前实现了CB14模型
-   - `b_res_sim.rs`: 提供模拟地震事件间残差的方法
-   - `w_res_sim.rs`: 提供模拟地震事件内残差的方法
-
-## 参考文献
-
-[1] K W Campbell, Y Bozorgnia. NGA-West2 Ground Motion Model for the Average Horizontal Components of PGA, PGV, and 5% Damped Linear Acceleration Response Spectra. Earthquake Spectra, 2014, 30(3): 1087-1115.
-
-[2] N Jayaram, J W Baker. Correlation model for spatially distributed ground-motion intensities. Earthquake Engineering & Structural Dynamics, 2009, 38(15): 1687-1708.
-
-[3] K Goda. Interevent Variability of Spatial Correlation of Peak Ground Motions and Response Spectra. Bulletin of the Seismological Society of America, 2011, 101(5): 2522-2531.
-
-[4] M Markhvida, L Ceferino, J W Baker. Modeling spatially correlated spectral accelerations at multiple periods using principal component analysis and geostatistics. Earthquake Engineering & Structural Dynamics, 2018, 47(5): 1107-1123.
